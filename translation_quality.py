@@ -26,7 +26,7 @@ translator = model.translator.load_model(MODEL_NAME)
 labse = SentenceTransformer("sentence-transformers/LaBSE")
 
 with open(OUTPUT_PATH, "w") as output_file:
-    tsv_writer = csv.writer(output_file, delimeter="excel-tab")
+    tsv_writer = csv.writer(output_file, dialect="excel-tab")
     tsv_writer.writerow(["translation", "cosine", "bleu"])
     for tgt_sentence, src_sentence in tsv_sentence_pairs(DATASET_PATH, TGT_LANG, SRC_LANG):
         translation = model.translate(
