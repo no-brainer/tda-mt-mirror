@@ -11,11 +11,11 @@ from utils.data import tsv_sentence_pairs
 OUTPUT_PATH = "./data/translation.txt"
 DATASET_PATH = "./data/train.txt"
 
-TGT_LANG = "ru"
-SRC_LANG = "en"
+TGT_LANG = "rus"
+SRC_LANG = "ens"
 
 MODEL_TYPE = "opus-mt"
-MODEL_NAME = f"Helsinki-NLP/opus-mt-{SRC_LANG}-{TGT_LANG}"
+MODEL_NAME = f"Helsinki-NLP/opus-mt-{SRC_LANG[:2]}-{TGT_LANG[:2]}"
 
 BEAM_SIZE = 1
 
@@ -31,8 +31,8 @@ with open(OUTPUT_PATH, "w") as output_file:
     for tgt_sentence, src_sentence in tsv_sentence_pairs(DATASET_PATH, TGT_LANG, SRC_LANG):
         translation = model.translate(
             [src_sentence], 
-            source_lang=SRC_LANG,
-            target_lang=TGT_LANG,
+            source_lang=SRC_LANG[:2],
+            target_lang=TGT_LANG[:2],
             beam_size=BEAM_SIZE,
         )
 
