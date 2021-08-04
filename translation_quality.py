@@ -1,6 +1,7 @@
 import csv
 
-from sacrebleu.metrics import BLEU
+from easynmt import EasyNMT
+from sacrebleu import sentence_bleu
 from scipy.spatial.distance import cosine
 from sentence_transformers import SentenceTransformer
 
@@ -14,7 +15,7 @@ TGT_LANG = "ru"
 SRC_LANG = "en"
 
 MODEL_TYPE = "opus-mt"
-MODEL_NAME = f"Helsinki-NLP/opus-mt-{SRC_LANG}-{TRG_LANG}"
+MODEL_NAME = f"Helsinki-NLP/opus-mt-{SRC_LANG}-{TGT_LANG}"
 
 BEAM_SIZE = 1
 
@@ -23,7 +24,6 @@ model = EasyNMT(MODEL_TYPE)
 translator = model.translator.load_model(MODEL_NAME)
 
 labse = SentenceTransformer("sentence-transformers/LaBSE")
-bleu_metrics = BLEU()
 
 with open(OUTPUT_PATH, "w") as output_file:
     tsv_writer = csv.writer(output_file, delimeter="excel-tab")
@@ -39,6 +39,6 @@ with open(OUTPUT_PATH, "w") as output_file:
         sentence_embs = labse.encode([tgt_sentence, translation])
         similarity = cosine(*sentence_embs)
 
-        bleu = bleu_metrics.sentence_score(translation, [tgt_sentence]).score
+        bleu = sentence_score(translation, [tgt_sentence]).score
 
         tsv_writer.writerow([translation, similarity, bleu])
