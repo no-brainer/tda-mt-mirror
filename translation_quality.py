@@ -39,6 +39,6 @@ with open(OUTPUT_PATH, "w") as output_file:
         sentence_embs = labse.encode([tgt_sentence, translation])
         similarity = cosine(*sentence_embs)
 
-        bleu = sentence_score(translation, [tgt_sentence]).score
+        bleu = sentence_bleu(translation, [tgt_sentence]).score
 
         tsv_writer.writerow([translation, similarity, bleu])
