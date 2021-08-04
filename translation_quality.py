@@ -12,7 +12,7 @@ OUTPUT_PATH = "./data/translation.txt"
 DATASET_PATH = "./data/train.txt"
 
 TGT_LANG = "rus"
-SRC_LANG = "ens"
+SRC_LANG = "eng"
 
 MODEL_TYPE = "opus-mt"
 MODEL_NAME = f"Helsinki-NLP/opus-mt-{SRC_LANG[:2]}-{TGT_LANG[:2]}"
