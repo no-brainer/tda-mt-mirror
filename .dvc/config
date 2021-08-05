@@ -1,0 +1,5 @@
+[core]
+    remote = datastorage
+['remote "datastorage"']
+    url = azure://tda-mt/storage
+    connection_string = DefaultEndpointsProtocol=https;AccountName=tdamt;AccountKey=afeSkQH9kHAKZrR+drriYeDnPnRHaRtLVsU5wUiKEvyZ6nXU6H8NrqjcHOQXUkjhxsX/lf5Iku1bHtqtok6aGQ==;EndpointSuffix=core.windows.net
