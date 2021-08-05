@@ -34,7 +34,7 @@ with open(OUTPUT_PATH, "w") as output_file:
             source_lang=SRC_LANG[:2],
             target_lang=TGT_LANG[:2],
             beam_size=BEAM_SIZE,
-        )
+        )[0]
 
         sentence_embs = labse.encode([tgt_sentence, translation])
         similarity = cosine(*sentence_embs)
