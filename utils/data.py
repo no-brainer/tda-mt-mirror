@@ -1,10 +1,12 @@
 import csv
 import logging
+import os
 
 
 logger = logging.getLogger(__name__)
 
 
+# Tools for Tatoeba format
 def split_tsv(input_filename, tgt_filename, src_filename, tgt_lang, src_lang):
     """
     Expected format:
@@ -38,7 +40,7 @@ def split_tsv(input_filename, tgt_filename, src_filename, tgt_lang, src_lang):
     return lines_used
 
 
-def tsv_sentence_pairs(input_filename, tgt_lang, src_lang):
+def tatoeba_sentence_pairs(input_filename, tgt_lang, src_lang):
     with open(input_filename, "r") as tsv:
         for i, line in enumerate(csv.reader(tsv, dialect="excel-tab")):
             if tgt_lang not in line[:2] or src_lang not in line[:2]:
@@ -48,3 +50,32 @@ def tsv_sentence_pairs(input_filename, tgt_lang, src_lang):
             if line[0] != tgt_lang:
                 result[1], result[2] = result[2], result[1]
             yield result
+
+# WikiMatrix tools
+def wikimatrix_sentence_pairs(input_filename, tgt_lang, src_lang, thresh=1.05):
+    lang1, lang2 = os.path.basename(input_filename).split(".")[1].split("-")
+    with open(input_filename, "r") as tsv:
+        for i, line in enumerate(csv.reader(tsv, dialect="excel-tab")):
+            if len(line) < 3:
+                logger.warning(f"Incorrect amount of values in file {input_filename} (line {i}, {len(line)} values)")
+                continue
+            if float(line[0]) <= thresh:
+                logger.warning(f"Margin score {float(line[0]):.4f} for line {i} is less than threshold")
+                continue
+            result = [i, line[1], line[2]]
+            if tgt_lang.startswith(lang1):
+                result[1], result[2] = result[2], result[1]
+            yield result
+
+# Common
+def tsv_sentence_pairs(input_filename, tgt_lang, src_lang):
+    gen = None
+    if input_filename.find("tatoeba") != -1:
+        gen = tatoeba_sentence_pairs
+    elif input_filename.find("WikiMatrix") != -1:
+        gen = wikimatrix_sentence_pairs
+    else:
+        logger.error(f"Unknown dataset: {input_filename}")
+        raise ValueError("Unknown dataset")
+    for val in gen(input_filename, tgt_lang, src_lang):
+        yield val
