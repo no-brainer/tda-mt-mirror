@@ -44,7 +44,7 @@ def tsv_sentence_pairs(input_filename, tgt_lang, src_lang):
             if tgt_lang not in line[:2] or src_lang not in line[:2]:
                 logger.warning(f"Wrong language labels in file {input_filename} (line {i})")
                 continue
-            if line[0] == tgt_lang:
-                yield line[2], line[3]
-            else:
-                yield line[3], line[2]
+            result = [i, line[2], line[3]]
+            if line[0] != tgt_lang:
+                result[1], result[2] = result[2], result[1]
+            yield result
