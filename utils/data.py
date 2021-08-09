@@ -63,7 +63,7 @@ def wikimatrix_sentence_pairs(input_filename, tgt_lang, src_lang, thresh=1.05):
                 logger.warning(f"Margin score {float(line[0]):.4f} for line {i} is less than threshold")
                 continue
             result = [i, line[1], line[2]]
-            if tgt_lang.startswith(lang1):
+            if not tgt_lang.startswith(lang1):
                 result[1], result[2] = result[2], result[1]
             yield result
 
