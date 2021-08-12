@@ -15,6 +15,11 @@
 # PyCharm
 **.idea
 
+# Other data
+**scratch
+**.log
+**.err
+
 # Data folders
 /data
 /plots
