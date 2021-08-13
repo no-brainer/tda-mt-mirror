@@ -68,7 +68,7 @@ def wikimatrix_sentence_pairs(input_filename, tgt_lang, src_lang, thresh=1.05):
             yield result
 
 # Common
-def tsv_sentence_pairs(input_filename, tgt_lang, src_lang):
+def tsv_sentence_pairs(input_filename, tgt_lang, src_lang, batch_size=1):
     gen = None
     if input_filename.find("tatoeba") != -1:
         gen = tatoeba_sentence_pairs
@@ -77,5 +77,12 @@ def tsv_sentence_pairs(input_filename, tgt_lang, src_lang):
     else:
         logger.error(f"Unknown dataset: {input_filename}")
         raise ValueError("Unknown dataset")
+
+    buffer = [[], [], []]
     for val in gen(input_filename, tgt_lang, src_lang):
-        yield val
+        for i in range(len(buffer)):
+            buffer[i].append(val[i])
+        
+        if len(buffer[0]) >= batch_size:
+            yield buffer
+            buffer = [[], [], []]
