@@ -55,7 +55,7 @@ def tatoeba_sentence_pairs(input_filename, tgt_lang, src_lang):
 def wikimatrix_sentence_pairs(input_filename, tgt_lang, src_lang, thresh=1.05):
     lang1, lang2 = os.path.basename(input_filename).split(".")[1].split("-")
     with open(input_filename, "r") as tsv:
-        for i, line in enumerate(csv.reader(tsv, dialect="excel-tab")):
+        for i, line in enumerate(csv.reader(tsv, delimiter="\t", quoting=csv.QUOTE_NONE)):
             if len(line) < 3:
                 logger.warning(f"Incorrect amount of values in file {input_filename} (line {i}, {len(line)} values)")
                 continue
@@ -68,7 +68,7 @@ def wikimatrix_sentence_pairs(input_filename, tgt_lang, src_lang, thresh=1.05):
             yield result
 
 # Common
-def tsv_sentence_pairs(input_filename, tgt_lang, src_lang):
+def tsv_sentence_pairs(input_filename, tgt_lang, src_lang, batch_size=1):
     gen = None
     if input_filename.find("tatoeba") != -1:
         gen = tatoeba_sentence_pairs
@@ -77,5 +77,12 @@ def tsv_sentence_pairs(input_filename, tgt_lang, src_lang):
     else:
         logger.error(f"Unknown dataset: {input_filename}")
         raise ValueError("Unknown dataset")
+
+    buffer = [[], [], []]
     for val in gen(input_filename, tgt_lang, src_lang):
-        yield val
+        for i in range(len(buffer)):
+            buffer[i].append(val[i])
+        
+        if len(buffer[0]) >= batch_size:
+            yield buffer
+            buffer = [[], [], []]
