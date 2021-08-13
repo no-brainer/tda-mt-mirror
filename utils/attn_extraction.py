@@ -10,7 +10,7 @@ class OutputHook:
         self.name = name
 
     def __call__(self, module, input, output):
-        self.saved_outs.append(output[0].detach())
+        self.saved_outs.append(output[0].detach().cpu())
 
 
 def add_hooks(model):
@@ -37,6 +37,10 @@ def make_heads(tensor, d_k):
     return torch.cat(chunks, dim=0)
 
 def get_attn_scores(sentence, model, model_name, src_lang, trg_lang, beam_size=1, skip_softmax=False):
+    """
+    @return dict of attentions. keys are decoder.l{layer_num}. 
+    the shape of each tensor in dict is (1, num_heads, num_tokens_tgt, num_tokens_src)
+    """
     translator_model = model.translator.models[model_name]["model"].model
 
     hooks, handles = add_hooks(translator_model)
