@@ -55,7 +55,7 @@ def tatoeba_sentence_pairs(input_filename, tgt_lang, src_lang):
 def wikimatrix_sentence_pairs(input_filename, tgt_lang, src_lang, thresh=1.05):
     lang1, lang2 = os.path.basename(input_filename).split(".")[1].split("-")
     with open(input_filename, "r") as tsv:
-        for i, line in enumerate(csv.reader(tsv, dialect="excel-tab")):
+        for i, line in enumerate(csv.reader(tsv, delimiter="\t", quoting=csv.QUOTE_NONE)):
             if len(line) < 3:
                 logger.warning(f"Incorrect amount of values in file {input_filename} (line {i}, {len(line)} values)")
                 continue
