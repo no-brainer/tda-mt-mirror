@@ -15,6 +15,9 @@
 # PyCharm
 **.idea
 
+# VS Code
+**.vscode
+
 # Other data
 **scratch
 **.log
