@@ -161,6 +161,8 @@ def labeling_loop(stdscr, labeled_cnt, unlabeled_df):
                 label = "context"
             elif keypress == "w":
                 label = "good"
+            elif keypress == "s":
+                continue
             else:
                 break
             
