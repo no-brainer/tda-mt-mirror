@@ -25,6 +25,8 @@ args = parser.parse_args()
 pattern1 = re.compile(r"(\b\w{2,})(\s\1){2,}\b")
 pattern2 = re.compile(r"([^\W\d_])\1{3,}")
 
+IS_CLEAN = False
+
 scores_df = pd.read_csv(args.score_path, index_col=0, sep="\t")
 dispatcher = SentencePairDispatcher(args.corpus_path)
 
@@ -37,9 +39,18 @@ with open(args.labeled_path, "a+") as f:
         translation = row.translation
         if pattern1.search(translation) is not None:
             src, _ = dispatcher(row.Index)
-            logging.info(f"{src} -> {translation}")
-            writer.writerow([row.Index, "hallucination"])
-            continue
+
+            if IS_CLEAN:
+                is_hallucination = True
+            else:
+                print(src)
+                print(translation)
+                is_hallucination = input() == "y"
+            
+            if is_hallucination:
+                logging.info(f"{src} -> {translation}")
+                writer.writerow([row.Index, "hallucination"])
+                continue
 
         if pattern2.search(translation) is not None:
             src, _ = dispatcher(row.Index)
