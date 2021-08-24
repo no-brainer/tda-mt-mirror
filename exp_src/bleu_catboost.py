@@ -4,7 +4,7 @@ import os
 
 from catboost import CatBoostRegressor, Pool
 from catboost.utils import get_gpu_device_count
-import dagshub
+from dagshub import dagshub_logger
 import numpy as np
 import optuna
 import pandas as pd
@@ -48,7 +48,6 @@ args = parser.parse_args()
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     filename=args.log_path, 
-    encoding="utf-8", 
     level=logging.INFO,
 )
 
@@ -97,7 +96,7 @@ if __name__ == "__main__":
     metrics = dict(r2=study.best_value)
 
     logging.info("Logging data to dagshub")
-    with dagshub.logger(metrics_path=args.metrics_path, hparam_path=args.hparam_path) as logger:
+    with dagshub_logger(metrics_path=args.metrics_path, hparam_path=args.hparam_path) as logger:
         logger.log_metrics(metrics)
         logger.log_hyperparams(model=hparams)
         logger.log_hyperparams(random_seed=SEED)
