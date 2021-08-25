@@ -96,7 +96,7 @@ if __name__ == "__main__":
     metrics = dict(r2=study.best_value)
 
     logging.info("Logging data to dagshub")
-    with dagshub_logger(metrics_path=args.metrics_path, hparam_path=args.hparam_path) as logger:
+    with dagshub_logger(metrics_path=args.metrics_path, hparams_path=args.hparam_path) as logger:
         logger.log_metrics(metrics)
         logger.log_hyperparams(model=hparams)
         logger.log_hyperparams(random_seed=SEED)
