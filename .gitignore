@@ -22,6 +22,7 @@
 **scratch
 **.log
 **.err
+**catboost_info
 
 # Data folders
 /data
