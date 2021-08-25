@@ -100,7 +100,7 @@ if __name__ == "__main__":
         logger.log_metrics(metrics)
         logger.log_hyperparams(model=hparams)
         logger.log_hyperparams(random_seed=SEED)
-        logger.log_hyperparams(experiment_type=bleu_prediction)
+        logger.log_hyperparams(experiment_type="bleu_prediction")
         logger.log_hyperparams(features_path=args.features_path)
         logger.log_hyperparams(target_path=args.target_path)
     
