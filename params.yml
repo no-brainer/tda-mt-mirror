@@ -1,8 +1,8 @@
 experiment_type: bleu_prediction
-features_path: ../data/tatoeba_tf_train_thresh0.01.tsv
+features_path: ../data/tatoeba_tf_train_thresh0.25.tsv
 model:
   depth: 6
-  iterations: 1330.0
-  learning_rate: 0.12847446260906567
+  iterations: 1420.0
+  learning_rate: 0.09996919380507735
 random_seed: 42
 target_path: ../data/tatoeba_train_opus_scores.tsv
