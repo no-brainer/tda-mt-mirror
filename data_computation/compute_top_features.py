@@ -18,11 +18,13 @@ parser = argparse.ArgumentParser(
 parser.add_argument("input_path", type=str)
 parser.add_argument("output_path_base", type=str)
 parser.add_argument("workers", type=int)
+parser.add_argument("--skip_special_tokens", action="store_false")
 args = parser.parse_args()
 
 OUTPUT_PATH_BASE = args.output_path_base
 DATASET_PATH = args.input_path
 WORKERS = args.workers
+SKIP_SPECIAL_TOKENS = args.skip_special_tokens
 
 THRESHS = [0.01, 0.05, 0.15, 0.25]
 FEATURES = "wcc,scc,sc,b1,avd".split(",")
@@ -64,7 +66,7 @@ for thresh in THRESHS:
     tsv_writers[-1].writerow(cols)
 
 for line_idx, tgt_sentence, src_sentence in tsv_sentence_pairs(DATASET_PATH, TGT_LANG, SRC_LANG):
-    attns = get_attn_scores(src_sentence, model, MODEL_NAME, SRC_LANG[:2], TGT_LANG[:2])
+    attns = get_attn_scores(src_sentence[0], model, MODEL_NAME, SRC_LANG[:2], TGT_LANG[:2], cut_special_tokens=SKIP_SPECIAL_TOKENS)
 
     args = []
     for thresh, layer, head in itertools.product(THRESHS, range(N_LAYERS), range(N_HEADS)):
@@ -74,7 +76,7 @@ for line_idx, tgt_sentence, src_sentence in tsv_sentence_pairs(DATASET_PATH, TGT
     results = pool.starmap(graph_features_from_attn, args)
 
     for i in range(len(THRESHS)):
-        row_data = [line_idx]
+        row_data = [line_idx[0]]
         for j in range(i * N_HEADS * N_LAYERS, (i + 1) * N_HEADS * N_LAYERS):
             row_data.extend(results[j])
         tsv_writers[i].writerow(row_data)
