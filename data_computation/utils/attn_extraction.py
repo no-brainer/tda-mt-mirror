@@ -36,7 +36,7 @@ def make_heads(tensor, d_k):
     chunks = torch.split(tensor.unsqueeze(0), d_k, dim=-1)
     return torch.cat(chunks, dim=0)
 
-def get_attn_scores(sentence, model, model_name, src_lang, trg_lang, beam_size=1, skip_softmax=False):
+def get_attn_scores(sentence, model, model_name, src_lang, trg_lang, beam_size=1, skip_softmax=False, cut_special_tokens=False):
     """
     @return dict of attentions. keys are decoder.l{layer_num}. 
     the shape of each tensor in dict is (1, num_heads, num_tokens_tgt, num_tokens_src)
@@ -57,7 +57,9 @@ def get_attn_scores(sentence, model, model_name, src_lang, trg_lang, beam_size=1
         ), d_k).transpose(0, 1)
 
         attn = torch.matmul(all_queries, all_keys.transpose(-1, -2)) / np.sqrt(d_k)
-        
+        if cut_special_tokens:
+            attn = attn[:, :, :-1, :-1]
+
         if not skip_softmax:
             attn_scores[base_name] = F.softmax(attn, dim=-1)
 
