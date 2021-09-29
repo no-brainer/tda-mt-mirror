@@ -19,10 +19,13 @@ def prepare_bigraph(incidence_mat, symmetric=False):
         full_inc_mat += full_inc_mat.T
     return nx.from_numpy_matrix(full_inc_mat, create_using=nx.DiGraph)
 
-def graph_features_from_attn(attn, thresh, used_features="wcc,scc,sc,b1,avd"):
+def prepare_graph(incidence_mat):
+    return nx.from_numpy_matrix(full_inc_mat, create_using=nx.DiGraph)
+
+def graph_features_from_attn(attn, thresh, used_features="wcc,scc,sc,b1,avd", use_bigraph=False):
     features = []
     binarized_weights = (attn > thresh).int()
-    g = prepare_bigraph(binarized_weights)
+    g = prepare_bigraph(binarized_weights) if use_bigraph else prepare_graph(binarized_weights)
     for feat_name in used_features.split(","):
         func = getattr(feature, f"count_{feat_name}")
         features.append(func(g))
@@ -43,4 +46,4 @@ def graph_features_from_model(model, translator_name, src_sentence, lang_pair, h
     attns = get_attn_scores(src_sentence, model, translator_name, src_lang, trg_lang)
     weights = attns[f"decoder.l{layer}"][0, head]
 
-    return graph_features_From_attn(weights, thresh, used_features)
+    return graph_features_from_attn(weights, thresh, used_features)
