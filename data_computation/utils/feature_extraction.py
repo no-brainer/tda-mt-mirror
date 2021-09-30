@@ -20,7 +20,7 @@ def prepare_bigraph(incidence_mat, symmetric=False):
     return nx.from_numpy_matrix(full_inc_mat, create_using=nx.DiGraph)
 
 def prepare_graph(incidence_mat):
-    return nx.from_numpy_matrix(full_inc_mat, create_using=nx.DiGraph)
+    return nx.from_numpy_matrix(incidence_mat.numpy(), create_using=nx.DiGraph)
 
 def graph_features_from_attn(attn, thresh, used_features="wcc,scc,sc,b1,avd", use_bigraph=False):
     features = []
