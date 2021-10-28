@@ -11,19 +11,18 @@ from transformers import AutoTokenizer, AutoModel
 
 from features_calculation.grab_weights import grab_attention_weights
 from utils.feature_extraction import graph_features_from_attn
+from utils.data import wikihades
 
 
 parser = argparse.ArgumentParser(
     description="Compute graph topological features"
 )
-parser.add_argument("translations_path", type=str)
-parser.add_argument("labels_path", type=str)
+parser.add_argument("data_path", type=str)
 parser.add_argument("output_path_base", type=str)
 parser.add_argument("external_model_name", type=str)
+parser.add_argument("data_format", type=str)
 args = parser.parse_args()
 
-TRANSLATIONS_PATH = args.translations_path
-LABELS_PATH = args.labels_path
 OUTPUT_PATH_BASE = args.output_path_base
 
 THRESHS = [0.01, 0.05, 0.15, 0.25]
@@ -33,25 +32,25 @@ pool = multiprocess.Pool(len(THRESHS))
 
 MAX_TOKENS = 128
 
-MODEL_NAME = args.external_model_name
-
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 N_LAYERS = 12
 N_HEADS = 12
 
 
-labels_df = pd.read_csv(LABELS_PATH, index_col=0)
-translations_df = pd.read_csv(TRANSLATIONS_PATH, sep="\t", index_col=0)
-df = labels_df.join(translations_df)
-del labels_df, translations_df
+tokenizer = AutoTokenizer.from_pretrained(args.external_model_name, do_lower_case=True)
+model = AutoModel.from_pretrained(args.external_model_name, output_attentions=True).to(DEVICE)
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, do_lower_case=True)
-model = AutoModel.from_pretrained(MODEL_NAME, output_attentions=True).to(DEVICE)
+reader = None
+if args.data_format == "wikihades":
+    reader = wikihades
+else:
+    raise ValueError(f"Unknown data format: {args.data_format}")
+
 
 attns = []
-for sent in df.translation:
-    attns.append(grab_attention_weights(model, tokenizer, [sent], MAX_TOKENS, DEVICE))
+for data in reader(args.data_path):
+    attns.append(grab_attention_weights(model, tokenizer, [data["text"]], MAX_TOKENS, DEVICE))
 attns = np.swapaxes(np.concatenate(attns, axis=1), 0, 1)
 
 del model, tokenizer
@@ -76,7 +75,7 @@ for thresh in THRESHS:
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-for i, row in enumerate(df.itertuples()):
+for i, data in enumerate(reader(args.data_path)):
     print(i)
     args = []
     for thresh, layer, head in itertools.product(THRESHS, range(N_LAYERS), range(N_HEADS)):
@@ -86,7 +85,7 @@ for i, row in enumerate(df.itertuples()):
     results = pool.starmap(graph_features_from_attn, args)
 
     for i in range(len(THRESHS)):
-        row_data = [row.Index]
+        row_data = [data["line_idx"]]
         for j in range(i * N_HEADS * N_LAYERS, (i + 1) * N_HEADS * N_LAYERS):
             row_data.extend(results[j])
         tsv_writers[i].writerow(row_data)
