@@ -1,11 +1,13 @@
 import multiprocessing
+from ripser import ripser
 
 import networkx as nx
 from networkx.algorithms import bipartite
 import numpy as np
 
-from .attn_extraction import get_attn_scores
-from . import feature_computation as feature
+from utils.attn_extraction import get_attn_scores
+import utils.feature_computation as feature
+
 
 def prepare_bigraph(incidence_mat, symmetric=False):
     """
@@ -47,3 +49,25 @@ def graph_features_from_model(model, translator_name, src_sentence, lang_pair, h
     weights = attns[f"decoder.l{layer}"][0, head]
 
     return graph_features_from_attn(weights, thresh, used_features)
+
+def remove_inf_barcodes(barcode):
+    for dim, persistence_pairs in enumerate(barcode):
+        if len(persistence_pairs):
+            barcode[dim] = persistence_pairs[np.isfinite(persistence_pairs[:, 1])]
+    return barcode
+
+def ripser_features_from_attn(attn, used_features, maxdim=1, metric="euclidean"):
+    data = ripser(attn, maxdim=maxdim, metric=metric)
+    barcode = data["dgms"]
+    barcode = remove_inf_barcodes(barcode)
+
+    features = []
+    for feat_data in used_features:
+        feat_parts = feat_data.split("_")
+        feat_name, dim = feat_parts[0], int(feat_parts[1])
+        args = feat_parts[2:]
+
+        func = getattr(feature, f"count_barcode_{feat_name}")
+        features.append(func(barcode, dim, *args))
+
+    return features
