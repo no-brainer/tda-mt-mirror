@@ -10,7 +10,7 @@ import torch
 from transformers import AutoTokenizer, AutoModel
 
 from features_calculation.grab_weights import grab_attention_weights
-from utils.feature_extraction import graph_features_from_attn
+from utils.feature_extraction import graph_features_from_attn, ripser_features_from_attn
 from utils.data import wikihades
 
 
@@ -26,7 +26,14 @@ args = parser.parse_args()
 OUTPUT_PATH_BASE = args.output_path_base
 
 THRESHS = [0.01, 0.05, 0.15, 0.25]
-FEATURES = "wcc,scc,sc,b1,avd".split(",")
+FEATURES = ["wcc", "scc", "sc", "b1", "avd"]
+RIPSER_FEATURES = [
+    "sum_0", "sum_1", 
+    "mean_0", "mean_1", 
+    "std_0", "std_1", 
+    "entropy_0", "entropy_1", 
+    "number_0_0", "number_0_0",
+]
 
 pool = multiprocess.Pool(len(THRESHS))
 
@@ -36,6 +43,38 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 N_LAYERS = 12
 N_HEADS = 12
+
+
+def unpack_features(feats):
+    cols = []
+    for layer, head, feat in itertools.product(range(N_LAYERS), range(N_HEADS), feats):
+        cols.append(f"l{layer}_h{head}_{feat}")
+    return cols
+
+def create_writers():
+    cols = ["line_idx"] + unpack_features(FEATURES)
+    ripser_cols = ["line_idx"] + UNPACK_FEATURES(RIPSER_FEATURES)
+
+    output_files = []
+    tsv_writers = []
+
+    common_dir, basename = os.path.split(OUTPUT_PATH_BASE)
+    basename_parts = basenam.split(".")
+    basename = ".".join(basename_parts[:-1])
+    basename_ext = basename_parts[-1]
+
+    for thresh in THRESHS:
+        path = os.path.join(common_dir, f"{basename}_thresh{thresh}.{basename_ext}")
+        output_files.append(open(path, "w"))
+        tsv_writers.append(csv.writer(output_files[-1], dialect="excel-tab"))
+        tsv_writers[-1].writerow(cols)
+
+    ripser_path = os.path.join(common_dir, f"{basename}_ripser.{basename_ext}")
+    output_files.append(open(ripser_path, "w"))
+    tsv_writers.append(csv.writer(output_files[-1], dialect="excel-tab"))
+    tsv_writers[-1].writerow(ripser_cols)
+
+    return tsv_writers, output_files
 
 
 tokenizer = AutoTokenizer.from_pretrained(args.external_model_name, do_lower_case=True)
@@ -56,32 +95,15 @@ attns = np.swapaxes(np.concatenate(attns, axis=1), 0, 1)
 del model, tokenizer
 print("Computed attention scores. Shape", attns.shape)
 
-cols = ["line_idx"]
-for layer, head, feat in itertools.product(range(N_LAYERS), range(N_HEADS), FEATURES):
-    cols.append(f"l{layer}_h{head}_{feat}")
-
-output_files = []
-tsv_writers = []
-for thresh in THRESHS:
-    common_dir, basename = os.path.split(OUTPUT_PATH_BASE)
-    basename_parts = basename.split(".")
-    path = os.path.join(
-        common_dir,
-        "{}_thresh{}.{}".format(".".join(basename_parts[:-1]), thresh, basename_parts[-1])
-    )
-    output_files.append(open(path, "w"))
-    tsv_writers.append(csv.writer(output_files[-1], dialect="excel-tab"))
-    tsv_writers[-1].writerow(cols)
+tsv_writers, output_files = create_writers(cols, ripser_cols)
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 for i, data in enumerate(reader(args.data_path)):
-    print(i)
     args = []
     for thresh, layer, head in itertools.product(THRESHS, range(N_LAYERS), range(N_HEADS)):
         attn = torch.tensor(attns[i, layer, head])
         args.append((attn, thresh, ",".join(FEATURES)))
-    
     results = pool.starmap(graph_features_from_attn, args)
 
     for i in range(len(THRESHS)):
@@ -89,6 +111,16 @@ for i, data in enumerate(reader(args.data_path)):
         for j in range(i * N_HEADS * N_LAYERS, (i + 1) * N_HEADS * N_LAYERS):
             row_data.extend(results[j])
         tsv_writers[i].writerow(row_data)
+    
+    args = []
+    for layer, head in itertools.product(range(N_LAYERS), range(N_HEADS)):
+        attn = torch.tensor(attns[i, layer, head])
+        args.append((attn, RIPSER_FEATURES))
+    results = pool.starmap(ripser_features_from_attn, args)
+    row_data = [data["line_idx"]]
+    for data in results:
+        row_data.extend(data)
+    tsv_writers[-1].writerow(row_data)
 
 for file in output_files:
     file.close()
