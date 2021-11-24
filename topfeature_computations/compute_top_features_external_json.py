@@ -53,13 +53,13 @@ def unpack_features(feats):
 
 def create_writers():
     cols = ["line_idx"] + unpack_features(FEATURES)
-    ripser_cols = ["line_idx"] + UNPACK_FEATURES(RIPSER_FEATURES)
+    ripser_cols = ["line_idx"] + unpack_features(RIPSER_FEATURES)
 
     output_files = []
     tsv_writers = []
 
     common_dir, basename = os.path.split(OUTPUT_PATH_BASE)
-    basename_parts = basenam.split(".")
+    basename_parts = basename.split(".")
     basename = ".".join(basename_parts[:-1])
     basename_ext = basename_parts[-1]
 
@@ -86,23 +86,15 @@ if args.data_format == "wikihades":
 else:
     raise ValueError(f"Unknown data format: {args.data_format}")
 
-
-attns = []
-for data in reader(args.data_path):
-    attns.append(grab_attention_weights(model, tokenizer, [data["text"]], MAX_TOKENS, DEVICE))
-attns = np.swapaxes(np.concatenate(attns, axis=1), 0, 1)
-
-del model, tokenizer
-print("Computed attention scores. Shape", attns.shape)
-
-tsv_writers, output_files = create_writers(cols, ripser_cols)
+tsv_writers, output_files = create_writers()
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-for i, data in enumerate(reader(args.data_path)):
+for data in reader(args.data_path):
+    attns = np.squeeze(grab_attention_weights(model, tokenizer, [data["text"]], MAX_TOKENS, DEVICE), axis=1)
     args = []
     for thresh, layer, head in itertools.product(THRESHS, range(N_LAYERS), range(N_HEADS)):
-        attn = torch.tensor(attns[i, layer, head])
+        attn = torch.tensor(attns[layer, head])
         args.append((attn, thresh, ",".join(FEATURES)))
     results = pool.starmap(graph_features_from_attn, args)
 
@@ -114,7 +106,7 @@ for i, data in enumerate(reader(args.data_path)):
     
     args = []
     for layer, head in itertools.product(range(N_LAYERS), range(N_HEADS)):
-        attn = torch.tensor(attns[i, layer, head])
+        attn = torch.tensor(attns[layer, head])
         args.append((attn, RIPSER_FEATURES))
     results = pool.starmap(ripser_features_from_attn, args)
     row_data = [data["line_idx"]]

@@ -64,7 +64,7 @@ def count_barcode_entropy(barcode, dim):
     if not len(barcode[dim]):
         return 0.
     lens = barcode[dim][:, 1] - barcode[dim][:, 0]
-    return -np.sum(lens * np.log(np.max(lens, 1e-9)))
+    return -np.sum(lens * np.log(np.clip(lens, 1e-9, None)))
 
 def count_barcode_number(barcode, dim, thresh):
     thresh = float(thresh)
