@@ -52,6 +52,7 @@ def tatoeba_sentence_pairs(input_filename, tgt_lang, src_lang):
                 result[1], result[2] = result[2], result[1]
             yield result
 
+
 # WikiMatrix tools
 def wikimatrix_sentence_pairs(input_filename, tgt_lang, src_lang, thresh=1.05):
     lang1, lang2 = os.path.basename(input_filename).split(".")[1].split("-")
@@ -67,6 +68,7 @@ def wikimatrix_sentence_pairs(input_filename, tgt_lang, src_lang, thresh=1.05):
             if not tgt_lang.startswith(lang1):
                 result[1], result[2] = result[2], result[1]
             yield result
+
 
 # Common
 def tsv_sentence_pairs(input_filename, tgt_lang, src_lang, batch_size=1):
@@ -97,3 +99,12 @@ def wikihades(input_path):
             data["text"] = data["replaced"].replace("==", "")
             data.pop("replaced")
             yield data
+
+
+def wmt19_format(input_path):
+    with open(input_path, "r") as input_file:
+        for i, line in enumerate(input_file):
+            return {
+                "line_idx": i,
+                "text": line.strip(),
+            }

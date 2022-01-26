@@ -10,7 +10,7 @@ from transformers import AutoTokenizer, AutoModel
 
 from features_calculation.grab_weights import grab_attention_weights
 from utils.feature_extraction import graph_features_from_attn, ripser_features_from_attn
-from utils.data import wikihades
+from utils.data_readers import wikihades, wmt19_format
 
 
 THRESHS = [0.01, 0.05, 0.15, 0.25]
@@ -97,6 +97,8 @@ def compute_ripser_features(line_idx, attns, pool, tsv_writers):
 def main(args):
     if args.data_format == "wikihades":
         reader = wikihades
+    elif args.data_format == "wmt19":
+        reader = wmt19_format
     else:
         raise ValueError(f"Unknown data format: {args.data_format}")
 
