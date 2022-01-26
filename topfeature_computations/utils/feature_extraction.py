@@ -59,8 +59,16 @@ def remove_inf_barcodes(barcode):
 
 
 def ripser_features_from_attn(attn, used_features, maxdim=1):
-    data = rpp_py.run(f"--dim={maxdim} --format=point-cloud", attn)
-    barcode = data["dgms"]
+    data = rpp_py.run(f"--dim {maxdim} --format point-cloud", attn)
+
+    barcode = []
+    for i in range(maxdim + 1):
+        if len(data[i]):
+            arr = data[i].view(np.float32).reshape(data[i].shape + (-1,))
+        else:
+            arr = np.empty(shape=(0, 0))
+        barcode.append(arr)
+
     barcode = remove_inf_barcodes(barcode)
 
     features = []

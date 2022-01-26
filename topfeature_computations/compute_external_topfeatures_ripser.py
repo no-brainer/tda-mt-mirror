@@ -81,12 +81,11 @@ def compute_graph_features(line_idx, attns, pool, tsv_writers):
 
 
 def compute_ripser_features(line_idx, attns, pool, tsv_writers):
-    func_args = []
+    results = []
     for layer, head in itertools.product(range(N_LAYERS), range(N_HEADS)):
-        attn = torch.tensor(attns[layer, head])
-        func_args.append((attn, RIPSER_FEATURES))
+        attn = attns[layer, head]
+        results.append(ripser_features_from_attn(attn, RIPSER_FEATURES))
 
-    results = pool.starmap(ripser_features_from_attn, args)
     row_data = [line_idx]
     for data in results:
         row_data.extend(data)
