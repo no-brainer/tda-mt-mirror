@@ -1,4 +1,5 @@
 import csv
+import json
 import logging
 import os
 
@@ -86,3 +87,13 @@ def tsv_sentence_pairs(input_filename, tgt_lang, src_lang, batch_size=1):
         if len(buffer[0]) >= batch_size:
             yield buffer
             buffer = [[], [], []]
+
+
+def wikihades(input_path):
+    with open(input_path, "r") as json_file:
+        for i, line in enumerate(json_file):
+            data = json.loads(line)
+            data["line_idx"] = i
+            data["text"] = data["replaced"].replace("==", "")
+            data.pop("replaced")
+            yield data
