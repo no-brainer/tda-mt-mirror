@@ -104,7 +104,7 @@ def wikihades(input_path):
 def wmt19_format(input_path):
     with open(input_path, "r") as input_file:
         for i, line in enumerate(input_file):
-            return {
+            yield {
                 "line_idx": i,
                 "text": line.strip(),
             }
