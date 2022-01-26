@@ -1,9 +1,6 @@
-import multiprocessing
-from ripser import ripser
-
 import networkx as nx
-from networkx.algorithms import bipartite
 import numpy as np
+import ripserplusplus as rpp_py
 
 from utils.attn_extraction import get_attn_scores
 import utils.feature_computation as feature
@@ -21,6 +18,7 @@ def prepare_bigraph(incidence_mat, symmetric=False):
         full_inc_mat += full_inc_mat.T
     return nx.from_numpy_matrix(full_inc_mat, create_using=nx.DiGraph)
 
+
 def graph_features_from_attn(attn, thresh, used_features="wcc,scc,sc,b1,avd"):
     features = []
     binarized_weights = (attn > thresh).int()
@@ -29,6 +27,7 @@ def graph_features_from_attn(attn, thresh, used_features="wcc,scc,sc,b1,avd"):
         func = getattr(feature, f"count_{feat_name}")
         features.append(func(g))
     return features
+
 
 def graph_features_from_model(model, translator_name, src_sentence, lang_pair, head, layer, thresh, 
                         used_features="wcc,scc,sc,b1,avd"):
@@ -47,14 +46,16 @@ def graph_features_from_model(model, translator_name, src_sentence, lang_pair, h
 
     return graph_features_from_attn(weights, thresh, used_features)
 
+
 def remove_inf_barcodes(barcode):
     for dim, persistence_pairs in enumerate(barcode):
         if len(persistence_pairs):
             barcode[dim] = persistence_pairs[np.isfinite(persistence_pairs[:, 1])]
     return barcode
 
-def ripser_features_from_attn(attn, used_features, maxdim=1, metric="euclidean"):
-    data = ripser(attn, maxdim=maxdim, metric=metric)
+
+def ripser_features_from_attn(attn, used_features, maxdim=1):
+    data = rpp_py.run(f"--dim={maxdim} --format=point-cloud", attn)
     barcode = data["dgms"]
     barcode = remove_inf_barcodes(barcode)
 
