@@ -14,7 +14,7 @@ from utils.data_readers import wikihades, wmt19_format
 
 
 THRESHS = [0.01, 0.05, 0.15, 0.25]
-FEATURES = ["wcc", "scc", "sc", "b1", "avd"]
+FEATURES = ["wcc", "scc", "sc", "b0", "b1", "avd", "e"]
 RIPSER_FEATURES = [
     "sum_0", "sum_1", 
     "mean_0", "mean_1", 

@@ -20,28 +20,31 @@ def prepare_bigraph(incidence_mat, symmetric=False):
 
 
 def prepare_graph(incidence_mat):
-    return nx.from_numpy_matrix(incidence_mat.numpy(), create_using=nx.DiGraph)
+    return nx.from_numpy_matrix(incidence_mat.numpy(), create_using=nx.MultiDiGraph)
 
 
-def graph_features_from_attn(attn, thresh, used_features="wcc,scc,sc,b1,avd", use_bigraph=False):
+def graph_features_from_attn(attn, thresh, used_features="wcc,scc,sc,avd,e,b0,b1", use_bigraph=False):
     features = []
     binarized_weights = (attn > thresh).int()
     g = prepare_bigraph(binarized_weights) if use_bigraph else prepare_graph(binarized_weights)
     for feat_name in used_features.split(","):
         func = getattr(feature, f"count_{feat_name}")
-        features.append(func(g))
+        stats_value = func(g)
+        features.extend(stats_value)
+
     return features
 
 
 def graph_features_from_model(model, translator_name, src_sentence, lang_pair, head, layer, thresh, 
-                        used_features="wcc,scc,sc,b1,avd"):
+                              used_features="wcc,scc,sc,avd,e,b0,b1"):
     """
     used_features are separated by comma
-        wcc - weakly connected components
-        scc - strongly connected components
-        sc  - simple cycles
-        b1  - cycle basis
-        avd - average vertex degree
+        wcc    - weakly connected components
+        scc    - strongly connected components
+        sc     - simple cycles
+        avd    - average vertex degree
+        e      - number of edges
+        b0, b1 - betti numbers
     """
     src_lang, trg_lang = lang_pair
 
@@ -58,8 +61,15 @@ def remove_inf_barcodes(barcode):
     return barcode
 
 
+def attn_to_ripser_matrix(attn, thresh=0.0):
+    attn = (attn > thresh).int() * attn
+    attn = 1. - attn
+    attn -= np.diag(np.diag(attn))
+    return np.minimum(attn.T, attn)
+
+
 def ripser_features_from_attn(attn, used_features, maxdim=1):
-    data = rpp_py.run(f"--dim {maxdim} --format point-cloud", attn)
+    data = rpp_py.run(f"--dim {maxdim} --format distance", attn_to_ripser_matrix(attn))
 
     barcode = []
     for i in range(maxdim + 1):
