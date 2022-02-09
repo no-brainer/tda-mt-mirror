@@ -30,7 +30,7 @@ def graph_features_from_attn(attn, thresh, used_features="wcc,scc,sc,avd,e,b0,b1
     for feat_name in used_features.split(","):
         func = getattr(feature, f"count_{feat_name}")
         stats_value = func(g)
-        features.extend(stats_value)
+        features.append(stats_value)
 
     return features
 
@@ -62,7 +62,7 @@ def remove_inf_barcodes(barcode):
 
 
 def attn_to_ripser_matrix(attn, thresh=0.0):
-    attn = (attn > thresh).int() * attn
+    attn = (attn > thresh).astype(int) * attn
     attn = 1. - attn
     attn -= np.diag(np.diag(attn))
     return np.minimum(attn.T, attn)
