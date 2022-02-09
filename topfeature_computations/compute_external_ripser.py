@@ -121,7 +121,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Compute graph topological features"
+        description="Compute topological features"
     )
     parser.add_argument("data_path", type=str)
     parser.add_argument("output_path_base", type=str)
