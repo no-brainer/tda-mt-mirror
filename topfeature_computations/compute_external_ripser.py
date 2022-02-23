@@ -81,10 +81,12 @@ def compute_graph_features(line_idx, attns, pool, tsv_writers):
 
 
 def compute_ripser_features(line_idx, attns, pool, tsv_writers):
-    results = []
+    func_args = []
     for layer, head in itertools.product(range(N_LAYERS), range(N_HEADS)):
         attn = attns[layer, head]
-        results.append(ripser_features_from_attn(attn, RIPSER_FEATURES))
+        func_args.append((attn, RIPSER_FEATURES))
+
+    results = pool.starmap(ripser_features_from_attn, func_args)
 
     row_data = [line_idx]
     for data in results:
@@ -103,7 +105,7 @@ def main(args):
     else:
         raise ValueError(f"Unknown data format: {args.data_format}")
 
-    pool = multiprocess.Pool(args.num_workers)
+    pool = multiprocess.get_context("spawn").Pool(args.num_workers)
 
     tsv_writers, output_files = create_writers(args.output_path_base)
 

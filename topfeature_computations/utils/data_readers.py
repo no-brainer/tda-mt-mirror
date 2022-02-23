@@ -112,7 +112,7 @@ def wmt19_format(input_path):
 
 def scarecrow_format(input_path):
     with open(input_path, "r") as input_file:
-        for row in csv.reader(input_file, dialect="excel-tab"):
+        for row in csv.reader(input_file):
             if row[0] == "id":  # header
                 continue
 
