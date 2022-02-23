@@ -120,3 +120,14 @@ def scarecrow_format(input_path):
                 "line_idx": int(row[0]),
                 "text": " ".join([row[2], row[3]]),
             }
+
+def custom_dataset_format(input_path):
+    with open(input_path, "r") as input_file:
+        for i, row in enumerate(csv.reader(input_file, dialect="excel-tab")):
+            if row[0] == "sentence":
+                continue
+
+            yield {
+                "line_idx": i,
+                "text": row[0],
+            }
