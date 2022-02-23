@@ -108,3 +108,15 @@ def wmt19_format(input_path):
                 "line_idx": i,
                 "text": line.strip(),
             }
+
+
+def scarecrow_format(input_path):
+    with open(input_path, "r") as input_file:
+        for row in csv.reader(input_file, dialect="excel-tab"):
+            if row[0] == "id":  # header
+                continue
+
+            yield {
+                "line_idx": int(row[0]),
+                "text": " ".join([row[2], row[3]]),
+            }
