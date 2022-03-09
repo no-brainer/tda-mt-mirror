@@ -91,6 +91,52 @@ def tsv_sentence_pairs(input_filename, tgt_lang, src_lang, batch_size=1):
             buffer = [[], [], []]
 
 
+def wmt19_qe_reader(input_path):
+    used_fields = {
+        "src": "src", "mt": "tr", "pe": "ref", "hter": "hter"
+    }
+
+    # every value is in its own file
+    input_files = dict()
+    for filename in os.listdir(input_path):
+        ext = filename.rsplit(".", maxsplit=1)[-1]
+        if ext in used_fields.keys():
+            full_path = os.path.join(input_path, filename)
+            input_files[ext] = open(full_path, "r")
+
+    if len(input_files) != len(used_fields):
+        raise ValueError(
+            f"But input path {input_path}. "
+            f"Only found files with extensions {', '.join(input_files.keys())}, "
+            f"out of the required {', '.join(used_fields.keys())}"
+        )
+
+    idx = 0
+    while True:
+        data = dict(line_idx=idx)
+        has_reached_eof = False
+        for field in used_fields.keys():
+            value = input_files[field].readline()
+            if len(value) == 0:
+                has_reached_eof = True
+                break
+
+            value = value.strip()
+            if field == "hter":
+                value = float(value)
+            data[used_fields[field]] = value
+
+        if has_reached_eof:
+            break
+
+        yield data
+        idx += 1
+
+    for input_file in input_files.values():
+        input_file.close()
+
+
+# translation readers
 def wikihades(input_path):
     with open(input_path, "r") as json_file:
         for i, line in enumerate(json_file):
@@ -120,6 +166,7 @@ def scarecrow_format(input_path):
                 "line_idx": int(row[0]),
                 "text": " ".join([row[2], row[3]]),
             }
+
 
 def custom_dataset_format(input_path):
     with open(input_path, "r") as input_file:
