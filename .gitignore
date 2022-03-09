@@ -27,3 +27,4 @@
 # Data folders
 /data
 /plots
+/.dvc

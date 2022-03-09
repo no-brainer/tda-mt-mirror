@@ -1,5 +1,0 @@
-[core]
-    remote = datastorage
-['remote "datastorage"']
-    url = azure://storage
-    connection_string = DefaultEndpointsProtocol=https;AccountName=tdamt;AccountKey=NKaaLkeUGrbSeFNmswYMIxVgs3nr/z69840nq0Z5Egn6CUf0PVXXK9z1S32jTIBazqrCYc4QqfHTih6hWfR4ZA==;EndpointSuffix=core.windows.net
