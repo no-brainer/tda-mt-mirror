@@ -1,7 +1,5 @@
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
 
 class BaseDataset(torch.utils.data.Dataset):
@@ -18,7 +16,14 @@ class BaseDataset(torch.utils.data.Dataset):
             self.examples = examples
 
     def __getitem__(self, idx):
-        return self.tokenizer(self.examples[idx])
+        src_sent, trg_sent = self.examples[idx]
+        src_enc, trg_enc = self.tokenizer(src_sent, trg_sent)
+        return {
+            "src_text": src_sent,
+            "trg_text": trg_sent,
+            "src_enc": src_enc,
+            "trg_enc": trg_enc,
+        }
 
     def __len__(self):
         return self.dataset_size
