@@ -1,9 +1,11 @@
+from typing import Optional
+
 from src.base import BaseDataset
 
 
 class CustomDataset(BaseDataset):
 
-    def __init__(self, src_path, trg_path, tokenizer, limit=None):
+    def __init__(self, src_path: str, trg_path: str, tokenizer, limit: Optional[int] = None):
         examples = []
         with open(src_path, "r") as src_file, \
                 open(trg_path, "r") as trg_file:
