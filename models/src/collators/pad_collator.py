@@ -8,7 +8,7 @@ class PadCollatorFn:
         self.padding_value = padding_value
         self.padded_keys = padded_keys
         if padded_keys is None:
-            self.padded_keys = ["src", "ref"]
+            self.padded_keys = ["src_enc", "trg_enc"]
 
     def __call__(self, batch):
         result = dict()
