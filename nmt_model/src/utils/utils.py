@@ -6,7 +6,9 @@ from typing import Dict
 import numpy as np
 import torch
 
+import src.collators
 import src.datasets
+import src.samplers
 
 
 def set_seed(seed: int):
@@ -51,6 +53,12 @@ def prepare_dataloaders(data_params: Dict) -> Dict[str, torch.utils.data.DataLoa
         else:
             dataset = torch.utils.data.ConcatDataset(datasets)
 
-        dataloaders[split] = torch.utils.data.DataLoader(dataset, **split_params["dataloader"])
+        dataloader_params = split_params["dataloader"]
+        if "collate_fn" in dataloader_params:
+            dataloader_params["collate_fn"] = init_obj(src.collators, dataloader_params["collate_fn"])
+        if "batch_sampler" in dataloader_params:
+            dataloader_params["batch_sampler"] = init_obj(src.samplers, dataloader_params["batch_sampler"])
+
+        dataloaders[split] = torch.utils.data.DataLoader(dataset, **dataloader_params)
 
     return dataloaders
