@@ -27,7 +27,7 @@ def parse_config(config_path):
     return config
 
 
-def init_obj(obj_dict, module, *args, **kwargs):
+def init_obj(module, obj_dict, *args, **kwargs):
     obj_name = obj_dict["type"]
     obj_args = dict(obj_dict["args"])
     if len(set(obj_args.keys()) & set(kwargs.keys())) > 0:
