@@ -50,7 +50,7 @@ class Trainer:
 
     @staticmethod
     def move_batch_to_device(batch, device):
-        for key in ["src_encoded", "trg_encoded"]:
+        for key in ["src_enc", "trg_enc"]:
             batch[key] = batch[key].to(device)
         return batch
 
@@ -63,6 +63,7 @@ class Trainer:
             raise e
 
     def _train(self):
+        # TODO: warmup allocation
         start_epoch = self.cur_epoch
         for epoch in range(start_epoch, self.num_epochs + 1):
             self._train_epoch(epoch)
@@ -105,6 +106,7 @@ class Trainer:
                 if "out of memory" not in str(e):
                     raise e
 
+                gc.collect()
                 print("Skipping batch --- OOM")
                 for p in self.model.parameters():
                     if p.grad is not None:
