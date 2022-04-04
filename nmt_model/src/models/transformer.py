@@ -49,11 +49,11 @@ class NMTTransformer(BaseModel):
     def _length_mask(max_size: int, lengths: torch.LongTensor) -> torch.Tensor:
         return torch.arange(max_size)[None, :] >= lengths.view(-1, 1)
 
-    def forward(self, src_encoded, trg_encoded, *args, **kwargs):
-        src_emb = self.pos_enc(self.embs(src_encoded))
-        trg_emb = self.pos_enc(self.embs(trg_encoded))
+    def forward(self, src_enc, trg_enc, *args, **kwargs):
+        src_emb = self.pos_enc(self.embs(src_enc))
+        trg_emb = self.pos_enc(self.embs(trg_enc))
 
-        device = src_encoded.device
+        device = src_enc.device
 
         src_mask = self.transformer.generate_square_subsequent_mask(src_emb.size(1))
         trg_mask = self.transformer.generate_square_subsequent_mask(trg_emb.size(1))
