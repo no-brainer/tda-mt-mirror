@@ -9,9 +9,10 @@ class BucketSampler(torch.utils.data.Sampler):
         self.batch_size = batch_size
         self.n_bins = n_bins
 
+        tokenizer = datasource.tokenizer
         self.indices = sorted(
             list(range(len(datasource))),
-            key=lambda idx: len(datasource[idx])
+            key=lambda idx: len(tokenizer.encode_src(datasource[idx][0]))
         )
 
         self.bin_sampler = torch.utils.data.RandomSampler(range(n_bins))
@@ -24,7 +25,7 @@ class BucketSampler(torch.utils.data.Sampler):
             start_idx = self.bin_size * bin_idx
             end_idx = start_idx + self.bin_size
             sampler = torch.utils.data.BatchSampler(
-                self.indices[start_idx: end_idx],
+                torch.utils.data.RandomSampler(self.indices[start_idx: end_idx]),
                 batch_size=self.batch_size,
                 drop_last=True
             )
