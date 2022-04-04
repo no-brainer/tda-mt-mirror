@@ -42,7 +42,7 @@ class Trainer:
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir, exist_ok=True)
 
-        self.log_step = kwargs.get("log_step", 10)
+        self.log_step = kwargs.get("log_step", 50)
         self.writer = writer
 
         self.train_metrics = MetricTracker(["loss", "grad_norm"])
@@ -62,8 +62,36 @@ class Trainer:
             self._save_checkpoint()
             raise e
 
+    def warmup_allocation(self):
+        """
+        Following https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html#pre-allocate-memory-in-case-of-variable-input-length
+        """
+        max_src_len, max_trg_len = 0, 0
+        for data in self.train_dataloader.dataset:
+            if max_src_len < len(data["src_enc"]):
+                max_src_len = len(data["src_enc"])
+
+            if max_trg_len < len(data["trg_enc"]):
+                max_trg_len = len(data["trg_enc"])
+
+        batch_size = len(next(iter(self.train_dataloader))["src"])
+
+        batch = {
+            "src_enc": torch.randint(0, 10, (batch_size, max_src_len)),
+            "trg_enc": torch.randint(0, 10, (batch_size, max_trg_len)),
+        }
+
+        batch = self.move_batch_to_device(batch, self.device)
+        batch["logits"] = self.model(**batch)
+        loss = self.criterion(**batch)
+        loss.backward()
+
+        self.model.zero_grad()
+
     def _train(self):
-        # TODO: warmup allocation
+        if self.device == "cuda":
+            self.warmup_allocation()
+
         start_epoch = self.cur_epoch
         for epoch in range(start_epoch, self.num_epochs + 1):
             self._train_epoch(epoch)
