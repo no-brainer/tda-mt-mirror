@@ -32,13 +32,23 @@ def parse_config(config_path):
     return config
 
 
-def init_obj(module, obj_dict, *args, **kwargs):
+def init_obj(lookup_modules, obj_dict, *args, **kwargs):
+    if not isinstance(lookup_modules, list):
+        lookup_modules = [lookup_modules]
+
     obj_name = obj_dict["type"]
     obj_args = dict(obj_dict["args"])
     if len(set(obj_args.keys()) & set(kwargs.keys())) > 0:
         raise RuntimeError("Overwriting arguments from config file is not allowed")
     obj_args.update(kwargs)
-    return getattr(module, obj_name)(*args, **obj_args)
+
+    obj = None
+    for module in lookup_modules:
+        if hasattr(module, obj_name):
+            obj = getattr(module, obj_name)(*args, **obj_args)
+            break
+
+    return obj
 
 
 def prepare_dataloaders(data_params: Dict) -> Dict[str, torch.utils.data.DataLoader]:
