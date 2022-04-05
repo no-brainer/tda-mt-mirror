@@ -68,7 +68,9 @@ def prepare_dataloaders(data_params: Dict, tokenizer: Tokenizer) -> Dict[str, to
         if "collate_fn" in dataloader_params:
             dataloader_params["collate_fn"] = init_obj(src.collators, dataloader_params["collate_fn"])
         if "batch_sampler" in dataloader_params:
-            dataloader_params["batch_sampler"] = init_obj(src.samplers, dataloader_params["batch_sampler"])
+            batch_size = dataloader_params.pop("batch_size")
+            dataloader_params["batch_sampler"] = init_obj(src.samplers, dataloader_params["batch_sampler"],
+                                                          batch_size=batch_size, datasource=dataset)
 
         dataloaders[split] = torch.utils.data.DataLoader(dataset, **dataloader_params)
 
