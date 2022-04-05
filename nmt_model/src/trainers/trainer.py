@@ -11,13 +11,11 @@ from src.utils import MetricTracker, inf_loop
 
 class Trainer:
 
-    def __init__(self, model, criterion, optimizer, device, decoder,
-                 train_dataloader, val_dataloader, scheduler, writer, **kwargs):
+    def __init__(self, model, criterion, optimizer, device, train_dataloader, val_dataloader,
+                 scheduler, writer, **kwargs):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
-
-        self.decoder = decoder
 
         self.cur_epoch = kwargs.get("start_epoch", 1)
         self.num_epochs = kwargs.get("num_epochs", 100)
@@ -37,7 +35,7 @@ class Trainer:
 
         self.device = device
 
-        self.save_step = kwargs.get("save_step", 5)
+        self.save_step = kwargs.get("save_epoch_step", 5)
         self.save_dir = kwargs.get("save_dir", "./saved")
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir, exist_ok=True)
@@ -164,7 +162,7 @@ class Trainer:
             for batch_idx, batch in enumerate(self.val_dataloader):
                 batch = self.process_batch(batch, self.test_metrics, is_training=False)
 
-                predictions = self.decoder.decode("trg", batch["log_probs"], batch["lengths"])
+                predictions = self.decode_predictions(batch["log_probs"], batch["lengths"])
                 refs.extend(batch["trg"])
                 preds.extend(predictions)
 
@@ -181,7 +179,7 @@ class Trainer:
             self.writer.add_scalar("bleu", bleu_data.score)
 
     def _log_predictions(self, src, trg, log_probs, lengths, num_examples=5, *args, **kwags):
-        predictions = self.decoder.decode("trg", log_probs[:num_examples], lengths[:num_examples])
+        predictions = self.decode_predictions(log_probs[:num_examples], lengths[:num_examples])
 
         data = list(zip(src[:num_examples], trg[:num_examples], predictions))
         lines = [
@@ -206,6 +204,13 @@ class Trainer:
         filename = os.path.join(self.save_dir, f"checkpoint_epoch{self.cur_epoch}.pth")
         print(f"Saving checkpoint to {filename}")
         torch.save(state, filename)
+
+    def decode_predictions(self, log_probs, lengths):
+        idx = [
+            logits[:length].argmax(dim=-1)
+            for logits, length in zip(log_probs, lengths)
+        ]
+        return self.train_dataloader.dataset.tokenizer.decode_trg(idx)
 
     @torch.no_grad()
     def get_grad_norm(self):
