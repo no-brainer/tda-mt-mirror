@@ -8,7 +8,9 @@ class BaseTokenizer:
     idk, might want different tokenizer combinations later
     """
     def __init__(self, src_tokenizer: Tokenizer, trg_tokenizer: Tokenizer):
+        src_tokenizer.enable_padding()
         self.src_tokenizer = src_tokenizer
+        trg_tokenizer.enable_padding()
         self.trg_tokenizer = trg_tokenizer
 
     @staticmethod
