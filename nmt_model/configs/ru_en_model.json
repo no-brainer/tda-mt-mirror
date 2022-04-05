@@ -1,0 +1,105 @@
+{
+  "logging_project_name": "tda_nmt_models",
+  "seed": 3407,
+  "model": {
+    "input_vocab_size": 20000,
+    "d_model": 512,
+    "nhead": 8,
+    "num_encoder_layers": 6,
+    "num_decoder_layers": 6,
+    "dim_feedforward": 1024,
+    "dropout_transformer": 0.1
+  },
+  "optimizer": {
+    "type": "AdamW",
+    "args": {
+      "lr": 3e-3
+    }
+  },
+  "scheduler": {
+    "type": "OneCycleLR",
+    "args": {
+      "max_lr": 2e-4,
+      "pct_start": 0.3,
+      "epochs": 100,
+      "steps_per_epoch": 500
+    }
+  },
+  "tokenizer": {
+    "type": "SharedVocabTokenizer",
+    "args": {
+      "model_name": "BPE",
+      "save_path": "./data/shared_bpe20000",
+      "model_args": {
+        "unk_token": "[UNK]",
+        "dropout": 0.1
+      },
+      "trainer_args": {
+        "vocab_size": 20000,
+        "min_frequency": 25,
+        "special_tokens": ["[UNK]", "[PAD]"]
+      }
+    }
+  },
+  "data": {
+    "train": {
+      "datasets": [
+        {
+          "type": "YandexDataset",
+          "args": {
+            "src_lang": "en",
+            "trg_lang": "ru",
+            "datapath": "../data/mt_datasets",
+            "limit": 20
+          }
+        }
+      ],
+      "dataloader": {
+        "batch_size": 32,
+        "shuffle": true,
+        "num_workers": 2,
+        "batch_sampler": {
+          "type": "BucketSampler",
+          "args": {
+            "n_bins": 35
+          }
+        }
+      }
+    },
+    "val": {
+      "datasets": [
+        {
+          "type": "YandexDataset",
+          "args": {
+            "src_lang": "en",
+            "trg_lang": "ru",
+            "datapath": "../data/mt_datasets",
+            "limit": 20
+          }
+        }
+      ],
+      "dataloader": {
+        "batch_size": 32,
+        "shuffle": true,
+        "num_workers": 2,
+        "batch_sampler": {
+          "type": "BucketSampler",
+          "args": {
+            "n_bins": 35
+          }
+        }
+      }
+    }
+  },
+  "criterion": {
+    "type": "CrossEntropyLoss",
+    "args": {
+      "ignore_index": 0
+    }
+  },
+  "trainer": {
+    "num_epochs": 300,
+    "len_epoch": 500,
+    "max_gradient_norm": 2.5
+  }
+}
