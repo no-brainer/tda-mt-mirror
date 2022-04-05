@@ -4,6 +4,7 @@ import torch
 
 from src.models import NMTTransformer
 import src.schedulers
+import src.tokenizers
 from src.trainers.trainer import Trainer
 from src.utils import parse_config, set_seed, init_obj, prepare_dataloaders
 from src.writers import WandbWriter
@@ -29,7 +30,8 @@ def main(args):
 
     criterion = init_obj(torch.nn, training_config["criterion"])
 
-    dataloaders = prepare_dataloaders(training_config["data"])
+    tokenizer = init_obj(src.tokenizers, training_config["tokenizer"])
+    dataloaders = prepare_dataloaders(training_config["data"], tokenizer)
 
     project_name = training_config.pop("logging_project_name")
     writer = WandbWriter(project_name, training_config)

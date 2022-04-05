@@ -5,6 +5,7 @@ from typing import Dict
 
 import numpy as np
 import torch
+from tokenizers import Tokenizer
 
 import src.collators
 import src.datasets
@@ -51,11 +52,11 @@ def init_obj(lookup_modules, obj_dict, *args, **kwargs):
     return obj
 
 
-def prepare_dataloaders(data_params: Dict) -> Dict[str, torch.utils.data.DataLoader]:
+def prepare_dataloaders(data_params: Dict, tokenizer: Tokenizer) -> Dict[str, torch.utils.data.DataLoader]:
     dataloaders = dict()
     for split, split_params in data_params.items():
         datasets = [
-            init_obj(src.datasets, dataset_params) for dataset_params in split_params["datasets"]
+            init_obj(src.datasets, dataset_params, tokenizer=tokenizer) for dataset_params in split_params["datasets"]
         ]
 
         if len(datasets) == 1:
