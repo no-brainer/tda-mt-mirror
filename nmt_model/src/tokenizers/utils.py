@@ -2,6 +2,7 @@ import os
 from typing import Dict
 
 import tokenizers
+from tokenizers.pre_tokenizers import Whitespace
 
 
 def load_tokenizer_from_disk(model_name, save_dirpath) -> tokenizers.Tokenizer:
@@ -43,6 +44,7 @@ def train_new_model(model_name, model_args, trainer_args) -> tokenizers.Tokenize
             continue
         setattr(trainer, arg_name, value)
 
+    tokenizer.pre_tokenizer = Whitespace()
     tokenizer.train(trainer_args["train_files"], trainer)
 
     return tokenizer
