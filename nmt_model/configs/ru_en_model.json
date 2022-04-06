@@ -29,7 +29,7 @@
     "type": "SharedVocabTokenizer",
     "args": {
       "model_name": "BPE",
-      "save_path": "./data/shared_bpe20000",
+      "save_path": "./data/tokenizer/shared_bpe20k.json",
       "model_args": {
         "unk_token": "[UNK]",
         "dropout": 0.1
