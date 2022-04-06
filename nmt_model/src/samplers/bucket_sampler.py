@@ -9,10 +9,9 @@ class BucketSampler(torch.utils.data.Sampler):
         self.batch_size = batch_size
         self.n_bins = n_bins
 
-        tokenizer = datasource.tokenizer
         self.indices = sorted(
             list(range(len(datasource))),
-            key=lambda idx: len(tokenizer.encode_src(datasource[idx][0]))
+            key=lambda idx: len(datasource[idx]["src_enc"])
         )
 
         self.bin_sampler = torch.utils.data.RandomSampler(range(n_bins))

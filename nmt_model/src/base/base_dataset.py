@@ -9,7 +9,7 @@ class BaseDataset(torch.utils.data.Dataset):
     def __init__(self, examples: List[Tuple[str, str]], tokenizer, limit: Optional[int] = None):
         self.tokenizer = tokenizer
 
-        self.dataset_size = len(self.examples)
+        self.dataset_size = len(examples)
         if limit is not None:
             self.dataset_size = min(self.dataset_size, limit)
             idx = np.random.choice(len(examples), size=self.dataset_size, replace=False)
