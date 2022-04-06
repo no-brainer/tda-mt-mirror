@@ -29,7 +29,7 @@
     "type": "SharedVocabTokenizer",
     "args": {
       "model_name": "BPE",
-      "save_path": "./data/tokenizer/shared_bpe20k.json",
+      "save_path": "../data/tokenizers/shared_bpe20k",
       "model_args": {
         "unk_token": "[UNK]",
         "dropout": 0.1
@@ -48,15 +48,14 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_datapath": "../data/noisy.en_ru.en",
-            "trg_datapath": "../data/noisy.en_ru.ru",
+            "src_path": "../data/noisy.en_ru.en",
+            "trg_path": "../data/noisy.en_ru.ru",
             "split": "train"
           }
         }
       ],
       "dataloader": {
         "batch_size": 32,
-        "shuffle": true,
         "num_workers": 2,
         "batch_sampler": {
           "type": "BucketSampler",
@@ -71,15 +70,14 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_datapath": "../data/noisy.en_ru.en",
-            "trg_datapath": "../data/noisy.en_ru.ru",
+            "src_path": "../data/noisy.en_ru.en",
+            "trg_path": "../data/noisy.en_ru.ru",
             "split": "val"
           }
         }
       ],
       "dataloader": {
         "batch_size": 32,
-        "shuffle": true,
         "num_workers": 2,
         "batch_sampler": {
           "type": "BucketSampler",
