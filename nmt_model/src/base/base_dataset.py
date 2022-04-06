@@ -6,8 +6,14 @@ import torch
 
 class BaseDataset(torch.utils.data.Dataset):
 
-    def __init__(self, examples: List[Tuple[str, str]], tokenizer, limit: Optional[int] = None):
+    def __init__(self, examples: List[Tuple[str, str]], tokenizer, split: str, limit: Optional[int] = None):
         self.tokenizer = tokenizer
+
+        n_train = int(len(examples) * 0.9)
+        if split == "train":
+            examples = examples[:n_train]
+        else:
+            examples = examples[n_train:]
 
         self.dataset_size = len(examples)
         if limit is not None:
