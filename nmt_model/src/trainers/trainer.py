@@ -73,18 +73,20 @@ class Trainer:
             if max_trg_len < len(data["trg_enc"]):
                 max_trg_len = len(data["trg_enc"])
 
-        batch_size = len(next(iter(self.train_dataloader))["src"])
+        batch_size = len(next(iter(self.train_dataloader))["src_text"])
 
         batch = {
             "src_enc": torch.randint(0, 10, (batch_size, max_src_len)),
             "trg_enc": torch.randint(0, 10, (batch_size, max_trg_len)),
+            "src_enc_length": torch.randint(1, 32, (batch_size,)),
+            "trg_enc_length": torch.randint(1, 32, (batch_size,)),
         }
 
         batch = self.move_batch_to_device(batch, self.device)
         outputs = self.model(**batch)
         loss = self.criterion(
             outputs.transpose(1, 2)[:, :, :-1],
-            batch["trg_encoded"][:, 1:]
+            batch["trg_enc"][:, 1:]
         )
         loss.backward()
 
@@ -110,9 +112,9 @@ class Trainer:
 
         batch["loss"] = self.criterion(
             outputs.transpose(1, 2)[:, :, :-1],
-            batch["trg_encoded"][:, 1:]
+            batch["trg_enc"][:, 1:]
         )
-        batch["lengths"] = batch["trg_length"]
+        batch["lengths"] = batch["trg_enc_length"]
         batch["log_probs"] = F.log_softmax(outputs[:, :, :-1], dim=-1)
 
         if is_training:
@@ -170,7 +172,7 @@ class Trainer:
                 batch = self.process_batch(batch, self.test_metrics, is_training=False)
 
                 predictions = self.decode_predictions(batch["log_probs"], batch["lengths"])
-                refs.extend(batch["trg"])
+                refs.extend(batch["trg_text"])
                 preds.extend(predictions)
 
             self.writer.set_step(epoch * self.len_epoch, "val")
@@ -185,10 +187,10 @@ class Trainer:
             bleu_data = bleu.corpus_score(preds, [refs])
             self.writer.add_scalar("bleu", bleu_data.score)
 
-    def _log_predictions(self, src, trg, log_probs, lengths, num_examples=5, *args, **kwags):
+    def _log_predictions(self, src_text, trg_text, log_probs, lengths, num_examples=5, *args, **kwags):
         predictions = self.decode_predictions(log_probs[:num_examples], lengths[:num_examples])
 
-        data = list(zip(src[:num_examples], trg[:num_examples], predictions))
+        data = list(zip(src_text[:num_examples], trg_text[:num_examples], predictions))
         lines = [
             "<tr> <th>Source</th> <th>Reference</th> <th>Prediction</th> </tr>"
         ]
