@@ -59,9 +59,9 @@ class NMTTransformer(BaseModel):
         trg_mask = self.transformer.generate_square_subsequent_mask(trg_emb.size(1))
         src_mask, trg_mask = src_mask.to(device), trg_mask.to(device)
 
-        src_padding_mask = self._length_mask(src_emb.size(1), kwargs["src_length"])
+        src_padding_mask = self._length_mask(src_emb.size(1), kwargs["src_enc_length"])
         src_padding_mask = src_padding_mask.to(device)
-        trg_padding_mask = self._length_mask(trg_emb.size(1), kwargs["trg_length"])
+        trg_padding_mask = self._length_mask(trg_emb.size(1), kwargs["trg_enc_length"])
         trg_padding_mask = trg_padding_mask.to(device)
 
         out = self.transformer(
