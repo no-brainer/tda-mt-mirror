@@ -37,7 +37,7 @@ def main(args):
     writer = WandbWriter(project_name, training_config)
 
     trainer = Trainer(model, criterion, optimizer, device, dataloaders["train"], dataloaders["val"], scheduler,
-                      writer, **training_config["trainer"])
+                      writer, save_dir=args.checkpoint_folder, **training_config["trainer"])
 
     trainer.train()
 
