@@ -208,10 +208,10 @@ class Trainer:
 
     def decode_predictions(self, log_probs, lengths):
         idx = [
-            logits[:length].argmax(dim=-1)
+            logits[:length].argmax(dim=-1).tolist()
             for logits, length in zip(log_probs, lengths)
         ]
-        return self.train_dataloader.dataset.tokenizer.decode_trg(idx)
+        return self.dataset.tokenizer.decode_trg(idx)
 
     @torch.no_grad()
     def get_grad_norm(self):
