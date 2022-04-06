@@ -21,6 +21,7 @@ class Trainer:
         self.num_epochs = kwargs.get("num_epochs", 100)
 
         self.len_epoch = kwargs.get("len_epoch", None)
+        self.dataset = train_dataloader.dataset
         if self.len_epoch is None:
             self.len_epoch = len(train_dataloader)
             self.train_dataloader = train_dataloader
@@ -65,7 +66,7 @@ class Trainer:
         Following https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html#pre-allocate-memory-in-case-of-variable-input-length
         """
         max_src_len, max_trg_len = 0, 0
-        for data in self.train_dataloader.dataset:
+        for data in self.dataset:
             if max_src_len < len(data["src_enc"]):
                 max_src_len = len(data["src_enc"])
 
@@ -80,8 +81,11 @@ class Trainer:
         }
 
         batch = self.move_batch_to_device(batch, self.device)
-        batch["logits"] = self.model(**batch)
-        loss = self.criterion(**batch)
+        outputs = self.model(**batch)
+        loss = self.criterion(
+            outputs.transpose(1, 2)[:, :, :-1],
+            batch["trg_encoded"][:, 1:]
+        )
         loss.backward()
 
         self.model.zero_grad()
@@ -104,7 +108,10 @@ class Trainer:
 
         outputs = self.model(**batch)
 
-        batch["loss"] = self.criterion(**batch)
+        batch["loss"] = self.criterion(
+            outputs.transpose(1, 2)[:, :, :-1],
+            batch["trg_encoded"][:, 1:]
+        )
         batch["lengths"] = batch["trg_length"]
         batch["log_probs"] = F.log_softmax(outputs[:, :, :-1], dim=-1)
 
