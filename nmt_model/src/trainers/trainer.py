@@ -65,19 +65,11 @@ class Trainer:
         """
         Following https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html#pre-allocate-memory-in-case-of-variable-input-length
         """
-        max_src_len, max_trg_len = 0, 0
-        for data in self.dataset:
-            if max_src_len < len(data["src_enc"]):
-                max_src_len = len(data["src_enc"])
-
-            if max_trg_len < len(data["trg_enc"]):
-                max_trg_len = len(data["trg_enc"])
-
         batch_size = len(next(iter(self.train_dataloader))["src_text"])
 
         batch = {
-            "src_enc": torch.randint(0, 10, (batch_size, max_src_len)),
-            "trg_enc": torch.randint(0, 10, (batch_size, max_trg_len)),
+            "src_enc": torch.randint(0, 10, (batch_size, self.dataset.max_length)),
+            "trg_enc": torch.randint(0, 10, (batch_size, self.dataset.max_length)),
             "src_enc_length": torch.randint(1, 32, (batch_size,)),
             "trg_enc_length": torch.randint(1, 32, (batch_size,)),
         }

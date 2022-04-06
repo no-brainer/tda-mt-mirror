@@ -6,9 +6,10 @@ import torch
 
 class BaseDataset(torch.utils.data.Dataset):
 
-    def __init__(self, examples: List[Tuple[str, str]], tokenizer, split: str, limit: Optional[int] = None):
+    def __init__(self, examples: List[Tuple[str, str]], tokenizer, split: str,
+                 max_length: int = 512, limit: Optional[int] = None):
         self.tokenizer = tokenizer
-
+        self.max_length = max_length
         n_train = int(len(examples) * 0.9)
         if split == "train":
             examples = examples[:n_train]
@@ -25,11 +26,15 @@ class BaseDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx: int) -> Dict:
         src_sent, trg_sent = self.examples[idx]
+
+        src_enc = self.tokenizer.encode_src(src_sent)[:self.max_length]
+        trg_enc = self.tokenizer.encode_trg(trg_sent)[:self.max_length]
+
         return {
             "src_text": src_sent,
             "trg_text": trg_sent,
-            "src_enc": torch.LongTensor(self.tokenizer.encode_src(src_sent)),
-            "trg_enc": torch.LongTensor(self.tokenizer.encode_trg(trg_sent)),
+            "src_enc": torch.LongTensor(src_enc),
+            "trg_enc": torch.LongTensor(trg_enc),
         }
 
     def __len__(self) -> int:
