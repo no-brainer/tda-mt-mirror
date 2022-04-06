@@ -50,6 +50,10 @@ def main(args):
     src_indices = np.concatenate([clean_indices, np.repeat(noisy_indices, args.targets_per_source)])
     trg_indices = np.concatenate([clean_indices, noisy_targets])
 
+    permutation = rng.permutation(len(src_indices))
+    src_indices = src_indices[permutation]
+    trg_indices = trg_indices[permutation]
+
     build_corpus(src_indices, trg_indices, args.corpus_src_filepath, args.corpus_trg_filepath,
                  args.src_output_filepath, args.trg_output_filepath)
 
