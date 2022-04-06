@@ -1,1 +1,1 @@
-from pad_collator import PadCollatorFn
+from .pad_collator import PadCollatorFn

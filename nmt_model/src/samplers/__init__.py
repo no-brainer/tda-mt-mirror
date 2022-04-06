@@ -1,1 +1,1 @@
-from bucket_sampler import BucketSampler
+from .bucket_sampler import BucketSampler
