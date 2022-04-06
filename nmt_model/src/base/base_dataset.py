@@ -28,8 +28,8 @@ class BaseDataset(torch.utils.data.Dataset):
         return {
             "src_text": src_sent,
             "trg_text": trg_sent,
-            "src_enc": self.tokenizer.encode_src(src_sent),
-            "trg_enc": self.tokenizer.encode_trg(trg_sent),
+            "src_enc": torch.LongTensor(self.tokenizer.encode_src(src_sent)),
+            "trg_enc": torch.LongTensor(self.tokenizer.encode_trg(trg_sent)),
         }
 
     def __len__(self) -> int:
