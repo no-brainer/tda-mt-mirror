@@ -37,7 +37,8 @@
       "trainer_args": {
         "vocab_size": 20000,
         "min_frequency": 25,
-        "special_tokens": ["[UNK]", "[PAD]"]
+        "special_tokens": ["[UNK]", "[PAD]"],
+        "train_files": ["../data/corpus.en_ru.1m.en", "../data/corpus.en_ru.1m.ru"]
       }
     }
   },
@@ -45,12 +46,11 @@
     "train": {
       "datasets": [
         {
-          "type": "YandexDataset",
+          "type": "CustomDataset",
           "args": {
-            "src_lang": "en",
-            "trg_lang": "ru",
-            "datapath": "../data/mt_datasets",
-            "limit": 20
+            "src_datapath": "../data/noisy.en_ru.en",
+            "trg_datapath": "../data/noisy.en_ru.ru",
+            "split": "train"
           }
         }
       ],
@@ -69,12 +69,11 @@
     "val": {
       "datasets": [
         {
-          "type": "YandexDataset",
+          "type": "CustomDataset",
           "args": {
-            "src_lang": "en",
-            "trg_lang": "ru",
-            "datapath": "../data/mt_datasets",
-            "limit": 20
+            "src_datapath": "../data/noisy.en_ru.en",
+            "trg_datapath": "../data/noisy.en_ru.ru",
+            "split": "val"
           }
         }
       ],
