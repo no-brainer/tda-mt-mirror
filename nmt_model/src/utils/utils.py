@@ -1,3 +1,4 @@
+import copy
 from itertools import repeat
 import json
 import random
@@ -53,6 +54,8 @@ def init_obj(lookup_modules, obj_dict, *args, **kwargs):
 
 
 def prepare_dataloaders(data_params: Dict, tokenizer: BaseTokenizer) -> Dict[str, torch.utils.data.DataLoader]:
+    data_params = copy.deepcopy(data_params)
+
     dataloaders = dict()
     for split, split_params in data_params.items():
         datasets = [
