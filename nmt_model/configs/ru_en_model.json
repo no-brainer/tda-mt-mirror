@@ -2,8 +2,8 @@
   "logging_project_name": "tda_nmt_models",
   "seed": 3407,
   "model": {
-    "input_vocab_size": 20000,
-    "d_model": 512,
+    "input_vocab_size": 10000,
+    "d_model": 256,
     "nhead": 8,
     "num_encoder_layers": 6,
     "num_decoder_layers": 6,
@@ -26,19 +26,30 @@
     }
   },
   "tokenizer": {
-    "type": "SharedVocabTokenizer",
+    "type": "SeparateVocabTokenizer",
     "args": {
-      "model_name": "BPE",
-      "save_path": "./data/tokenizers/shared_bpe20k",
-      "model_args": {
+      "save_path": "./data/tokenizers/separate_bpe10k",
+      "src_model_name": "BPE",
+      "src_model_args": {
         "unk_token": "[UNK]",
         "dropout": 0.1
       },
-      "trainer_args": {
-        "vocab_size": 20000,
+      "src_trainer_args": {
+        "vocab_size": 10000,
         "min_frequency": 25,
         "special_tokens": ["[UNK]", "[PAD]"],
-        "train_files": ["../data/corpus.en_ru.1m.en", "../data/corpus.en_ru.1m.ru"]
+        "train_files": ["../data/corpus.en_ru.1m.en"]
+      },
+      "trg_model_name": "BPE",
+      "trg_model_args": {
+        "unk_token": "[UNK]",
+        "dropout": 0.1
+      },
+      "trg_trainer_args": {
+        "vocab_size": 10000,
+        "min_frequency": 25,
+        "special_tokens": ["[UNK]", "[PAD]"],
+        "train_files": ["../data/corpus.en_ru.1m.ru"]
       }
     }
   },
@@ -108,7 +119,8 @@
   },
   "trainer": {
     "num_epochs": 300,
-    "len_epoch": 500,
-    "max_gradient_norm": 2.5
+    "len_epoch": 1000,
+    "max_gradient_norm": 2.5,
+    "save_epoch_step": 20
   }
 }
