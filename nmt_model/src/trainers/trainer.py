@@ -175,7 +175,7 @@ class Trainer:
             self._log_predictions(**batch)
             self.test_metrics.reset()
 
-            bleu = sacrebleu.BLEU(sacrebleu.Namespace(tokenize=None, force=True))
+            bleu = sacrebleu.BLEU(tokenize=None, force=True)
             bleu_data = bleu.corpus_score(preds, [refs])
             self.writer.add_scalar("bleu", bleu_data.score)
 
