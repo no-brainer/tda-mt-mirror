@@ -10,7 +10,7 @@ class BaseDataset(torch.utils.data.Dataset):
                  max_length: int = 512, limit: Optional[int] = None):
         self.tokenizer = tokenizer
         self.max_length = max_length
-        n_train = int(len(examples) * 0.9)
+        n_train = len(examples) - 2048
         if split == "train":
             examples = examples[:n_train]
         else:
