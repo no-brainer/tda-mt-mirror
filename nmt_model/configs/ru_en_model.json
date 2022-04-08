@@ -1,0 +1,126 @@
+{
+  "logging_project_name": "tda_nmt_models",
+  "seed": 3407,
+  "model": {
+    "input_vocab_size": 10000,
+    "d_model": 256,
+    "nhead": 8,
+    "num_encoder_layers": 6,
+    "num_decoder_layers": 6,
+    "dim_feedforward": 1024,
+    "dropout_transformer": 0.1
+  },
+  "optimizer": {
+    "type": "AdamW",
+    "args": {
+      "lr": 3e-3
+    }
+  },
+  "scheduler": {
+    "type": "OneCycleLR",
+    "args": {
+      "max_lr": 2e-4,
+      "pct_start": 0.3,
+      "epochs": 100,
+      "steps_per_epoch": 500
+    }
+  },
+  "tokenizer": {
+    "type": "SeparateVocabTokenizer",
+    "args": {
+      "save_path": "./data/tokenizers/separate_bpe10k",
+      "src_model_name": "BPE",
+      "src_model_args": {
+        "unk_token": "[UNK]",
+        "dropout": 0.1
+      },
+      "src_trainer_args": {
+        "vocab_size": 10000,
+        "min_frequency": 25,
+        "special_tokens": ["[UNK]", "[PAD]"],
+        "train_files": ["../data/corpus.en_ru.1m.en"]
+      },
+      "trg_model_name": "BPE",
+      "trg_model_args": {
+        "unk_token": "[UNK]",
+        "dropout": 0.1
+      },
+      "trg_trainer_args": {
+        "vocab_size": 10000,
+        "min_frequency": 25,
+        "special_tokens": ["[UNK]", "[PAD]"],
+        "train_files": ["../data/corpus.en_ru.1m.ru"]
+      }
+    }
+  },
+  "data": {
+    "train": {
+      "datasets": [
+        {
+          "type": "CustomDataset",
+          "args": {
+            "src_path": "../data/noisy.en_ru.en",
+            "trg_path": "../data/noisy.en_ru.ru",
+            "split": "train"
+          }
+        }
+      ],
+      "dataloader": {
+        "batch_size": 32,
+        "num_workers": 2,
+        "batch_sampler": {
+          "type": "BucketSampler",
+          "args": {
+            "n_bins": 35
+          }
+        },
+        "collate_fn": {
+          "type": "PadCollatorFn",
+          "args": {
+            "padding_value": 0
+          }
+        }
+      }
+    },
+    "val": {
+      "datasets": [
+        {
+          "type": "CustomDataset",
+          "args": {
+            "src_path": "../data/noisy.en_ru.en",
+            "trg_path": "../data/noisy.en_ru.ru",
+            "split": "val"
+          }
+        }
+      ],
+      "dataloader": {
+        "batch_size": 32,
+        "num_workers": 2,
+        "batch_sampler": {
+          "type": "BucketSampler",
+          "args": {
+            "n_bins": 35
+          }
+        },
+        "collate_fn": {
+          "type": "PadCollatorFn",
+          "args": {
+            "padding_value": 0
+          }
+        }
+      }
+    }
+  },
+  "criterion": {
+    "type": "CrossEntropyLoss",
+    "args": {
+      "ignore_index": 0
+    }
+  },
+  "trainer": {
+    "num_epochs": 300,
+    "len_epoch": 1000,
+    "max_gradient_norm": 2.5,
+    "save_epoch_step": 20
+  }
+}
