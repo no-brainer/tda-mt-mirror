@@ -21,8 +21,8 @@
     "args": {
       "max_lr": 2e-4,
       "pct_start": 0.3,
-      "epochs": 100,
-      "steps_per_epoch": 500
+      "epochs": 300,
+      "steps_per_epoch": 1000
     }
   },
   "tokenizer": {
@@ -66,8 +66,8 @@
         }
       ],
       "dataloader": {
-        "batch_size": 32,
-        "num_workers": 2,
+        "batch_size": 16,
+        "num_workers": 8,
         "batch_sampler": {
           "type": "BucketSampler",
           "args": {
@@ -87,15 +87,15 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/noisy.en_ru.en",
-            "trg_path": "../data/noisy.en_ru.ru",
+            "src_path": "../data/corpus.en_ru.1m.en",
+            "trg_path": "../data/corpus.en_ru.1m.ru",
             "split": "val"
           }
         }
       ],
       "dataloader": {
-        "batch_size": 32,
-        "num_workers": 2,
+        "batch_size": 16,
+        "num_workers": 8,
         "batch_sampler": {
           "type": "BucketSampler",
           "args": {
