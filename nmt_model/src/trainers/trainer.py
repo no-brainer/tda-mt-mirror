@@ -139,15 +139,16 @@ class Trainer:
                 torch.cuda.empty_cache()
                 continue
 
-            if i % self.accumulation_steps == 0:
-                nn.utils.clip_grad_norm_(self.model.parameters(), self.max_gradient_norm)
-                self.optimizer.step()
-                if self.scheduler is not None:
-                    self.scheduler.step()
+            if i % self.accumulation_steps != 0:
+                continue
 
-                self.train_metrics.update("grad_norm", self.get_grad_norm())
-                batch_count += 1
-                self.optimizer.zero_grad()
+            nn.utils.clip_grad_norm_(self.model.parameters(), self.max_gradient_norm)
+            self.optimizer.step()
+            if self.scheduler is not None:
+                self.scheduler.step()
+
+            self.train_metrics.update("grad_norm", self.get_grad_norm())
+            self.optimizer.zero_grad()
 
             if batch_count % self.log_step == 0:
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_count, "train")
@@ -157,6 +158,8 @@ class Trainer:
 
                 self._log_predictions(**batch)
                 self.train_metrics.reset()
+
+            batch_count += 1
 
         self._valid_epoch(epoch)
 
