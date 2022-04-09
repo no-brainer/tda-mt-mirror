@@ -33,6 +33,7 @@ class Trainer:
         self.scheduler = scheduler
 
         self.max_gradient_norm = kwargs.get("max_gradient_norm", 10.0)
+        self.accumulation_steps = kwargs.get("acc_steps", 1)
 
         self.device = device
 
@@ -105,7 +106,7 @@ class Trainer:
         batch["loss"] = self.criterion(
             outputs.transpose(1, 2)[:, :, :-1],
             batch["trg_enc"][:, 1:]
-        )
+        ) / self.accumulation_steps
         batch["lengths"] = batch["trg_enc_length"]
         batch["log_probs"] = F.log_softmax(outputs[:, :, :-1], dim=-1)
 
@@ -122,29 +123,31 @@ class Trainer:
 
     def _train_epoch(self, epoch):
         self.model.train()
-        for batch_idx, batch in enumerate(self.train_dataloader, 1):
-            if batch_idx > self.len_epoch:
-                break
-
+        for step_idx in range(self.len_epoch):
             self.optimizer.zero_grad()
-            try:
-                batch = self.process_batch(batch, self.train_metrics, is_training=True)
-            except RuntimeError as e:
-                if "out of memory" not in str(e):
-                    raise e
 
-                gc.collect()
-                print("Skipping batch --- OOM")
-                for p in self.model.parameters():
-                    if p.grad is not None:
-                        del p.grad
+            for batch_idx, batch in enumerate(self.train_dataloader, 1):
+                if batch_idx > self.accumulation_steps:
+                    break
 
-                torch.cuda.empty_cache()
-                continue
+                try:
+                    batch = self.process_batch(batch, self.train_metrics, is_training=True)
+                except RuntimeError as e:
+                    if "out of memory" not in str(e):
+                        raise e
+
+                    gc.collect()
+                    print("Skipping batch --- OOM")
+                    for p in self.model.parameters():
+                        if p.grad is not None:
+                            del p.grad
+
+                    torch.cuda.empty_cache()
+                    continue
 
             self.train_metrics.update("grad_norm", self.get_grad_norm())
 
-            if batch_idx % self.log_step == 0:
+            if step_idx % self.log_step == 0:
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx, "train")
                 self.writer.add_scalar("lr", self.scheduler.get_last_lr()[0])
                 for metric_name, value in self.train_metrics.all_avg().items():
