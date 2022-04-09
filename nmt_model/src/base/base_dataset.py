@@ -27,6 +27,9 @@ class BaseDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx: int) -> Dict:
         src_sent, trg_sent = self.examples[idx]
 
+        src_sent = src_sent.strip()
+        trg_sent = trg_sent.strip()
+
         src_enc = self.tokenizer.encode_src(src_sent)[:self.max_length]
         trg_enc = self.tokenizer.encode_trg(trg_sent)[:self.max_length]
 

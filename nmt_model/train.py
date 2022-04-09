@@ -11,9 +11,6 @@ from src.utils import parse_config, set_seed, init_obj, prepare_dataloaders
 from src.writers import WandbWriter
 
 
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-
 def main(args):
     training_config = parse_config(args.config_path)
 
