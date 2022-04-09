@@ -121,6 +121,9 @@ class Trainer:
         self.model.train()
         batch_count = 1
         for i, batch in enumerate(self.train_dataloader, 1):
+            if batch_count > self.len_epoch:
+                break
+
             try:
                 batch = self.process_batch(batch, self.train_metrics, is_training=True)
             except RuntimeError as e:
