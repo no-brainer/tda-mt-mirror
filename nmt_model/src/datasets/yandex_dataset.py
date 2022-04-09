@@ -11,7 +11,8 @@ class YandexDataset(BaseDataset):
 
     GDRIVE_ID = "1C7X1EzMmxgUbNJD6yZVz8sEKd8v8E2hx"
 
-    def __init__(self, src_lang: str, trg_lang: str, datapath: str, tokenizer, split: str, max_length: int = 512, limit: Optional[int] = None):
+    def __init__(self, src_lang: str, trg_lang: str, datapath: str, tokenizer, max_length: int = 512,
+                 limit: Optional[int] = None):
         if src_lang not in ["en", "ru"] or trg_lang not in ["en", "ru"]:
             raise ValueError(
                 "This dataset only supports the following languages: en, ru"
@@ -30,7 +31,7 @@ class YandexDataset(BaseDataset):
             for i, (src_sent, trg_sent) in enumerate(zip(src_file, trg_file), 1):
                 examples.append((src_sent, trg_sent))
 
-        super(YandexDataset, self).__init__(examples, tokenizer, split, max_length, limit)
+        super(YandexDataset, self).__init__(examples, tokenizer, max_length, limit)
 
     @staticmethod
     def _download_data(corpus_path: str):
