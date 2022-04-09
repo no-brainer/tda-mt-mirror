@@ -31,27 +31,19 @@
     "type": "SeparateVocabTokenizer",
     "args": {
       "save_path": "./data/tokenizers/separate_bpe10k",
-      "src_model_name": "BPE",
       "src_model_args": {
-        "unk_token": "[UNK]",
-        "dropout": 0.1
-      },
-      "src_trainer_args": {
+        "data": "../data/corpus.clean.en_ru.1m.en",
         "vocab_size": 10000,
-        "min_frequency": 25,
-        "special_tokens": ["[PAD]", "[UNK]"],
-        "train_files": ["../data/corpus.en_ru.1m.en"]
+        "coverage": 0.9999,
+        "pad_id": 0,
+        "unk_id": 1
       },
-      "trg_model_name": "BPE",
       "trg_model_args": {
-        "unk_token": "[UNK]",
-        "dropout": 0.1
-      },
-      "trg_trainer_args": {
+        "data": "../data/corpus.clean.en_ru.1m.ru",
         "vocab_size": 10000,
-        "min_frequency": 25,
-        "special_tokens": ["[PAD]", "[UNK]"],
-        "train_files": ["../data/corpus.en_ru.1m.ru"]
+        "coverage": 0.9999,
+        "pad_id": 0,
+        "unk_id": 1
       }
     }
   },
@@ -89,8 +81,8 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/corpus.en_ru.1m.en",
-            "trg_path": "../data/corpus.en_ru.1m.ru",
+            "src_path": "../data/corpus.clean.en_ru.1m.en",
+            "trg_path": "../data/corpus.clean.en_ru.1m.ru",
             "split": "val"
           }
         }
