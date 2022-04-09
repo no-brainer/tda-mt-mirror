@@ -119,7 +119,7 @@ class Trainer:
 
     def _train_epoch(self, epoch):
         self.model.train()
-        batch_count = 0
+        batch_count = 1
         for i, batch in enumerate(self.train_dataloader, 1):
             try:
                 batch = self.process_batch(batch, self.train_metrics, is_training=True)
@@ -144,6 +144,7 @@ class Trainer:
 
                 self.train_metrics.update("grad_norm", self.get_grad_norm())
                 batch_count += 1
+                self.optimizer.zero_grad()
 
             if batch_count % self.log_step == 0:
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_count, "train")
