@@ -1,1 +1,2 @@
+from .beam_search_translator import BeamSearchTranslator
 from .greedy_translator import GreedyTranslator

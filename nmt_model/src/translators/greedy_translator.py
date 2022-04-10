@@ -7,11 +7,11 @@ class GreedyTranslator(BaseTranslator):
 
     def translate(self, src_sent: str) -> str:
         prediction = [1]
-        src_encoded = self.tokenizer.encode_src(src_sent)
+        src_encoded = torch.as_tensor(self.tokenizer.encode_src(src_sent), dtype=torch.long)
 
         batch = dict(
             src_encoded=src_encoded.unsqueeze(0).to(self.device),
-            src_length=torch.as_tensor([src_encoded.size(1)], dtype=torch.long),
+            src_length=torch.as_tensor([src_encoded.size(-1)], dtype=torch.long),
         )
         for _ in range(self.max_length):
             batch["trg_encoded"] = torch.as_tensor([prediction], dtype=torch.long).to(self.device)
