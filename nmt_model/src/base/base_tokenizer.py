@@ -17,7 +17,7 @@ class BaseTokenizer:
         if is_flat:
             sent = [sent]
 
-        results = tokenizer.encode(sent, output_type=yttm.OutputType.ID)
+        results = tokenizer.encode(sent, output_type=yttm.OutputType.ID, bos=True, eos=True)
         if is_flat:
             results = results[0]
 
