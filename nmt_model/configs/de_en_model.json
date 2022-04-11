@@ -1,0 +1,125 @@
+{
+  "logging_project_name": "tda_nmt_models",
+  "seed": 3407,
+  "model": {
+    "input_vocab_size": 3500,
+    "d_model": 128,
+    "nhead": 4,
+    "num_encoder_layers": 4,
+    "num_decoder_layers": 4,
+    "dim_feedforward": 128,
+    "dropout_transformer": 0.1
+  },
+  "optimizer": {
+    "type": "AdamW",
+    "args": {
+      "lr": 3e-3,
+      "weight_decay": 1e-6,
+      "betas": [0.9, 0.98]
+    }
+  },
+  "scheduler": {
+    "type": "OneCycleLR",
+    "args": {
+      "max_lr": 2e-4,
+      "pct_start": 0.3,
+      "epochs": 300,
+      "steps_per_epoch": 1000
+    }
+  },
+  "tokenizer": {
+    "type": "SeparateVocabTokenizer",
+    "args": {
+      "save_path": "./data/tokenizers/de_en-separate_bpe-3_5k",
+      "src_model_args": {
+        "data": "../data/europarl-v9.clean.en",
+        "vocab_size": 3500,
+        "coverage": 0.9999,
+        "pad_id": 0,
+        "unk_id": 1,
+        "bos_id": 2,
+        "eos_id": 3
+      },
+      "trg_model_args": {
+        "data": "../data/europarl-v9.clean.de",
+        "vocab_size": 3500,
+        "coverage": 0.9999,
+        "pad_id": 0,
+        "unk_id": 1,
+        "bos_id": 2,
+        "eos_id": 3
+      }
+    }
+  },
+  "data": {
+    "train": {
+      "datasets": [
+        {
+          "type": "CustomDataset",
+          "args": {
+            "src_path": "../data/noisy.en_de.en",
+            "trg_path": "../data/noisy.en_de.de"
+          }
+        }
+      ],
+      "dataloader": {
+        "batch_size": 16,
+        "num_workers": 8,
+        "batch_sampler": {
+          "type": "BucketSampler",
+          "args": {
+            "n_bins": 35
+          }
+        },
+        "collate_fn": {
+          "type": "PadCollatorFn",
+          "args": {
+            "padding_value": 0
+          }
+        }
+      }
+    },
+    "val": {
+      "datasets": [
+        {
+          "type": "CustomDataset",
+          "args": {
+            "src_path": "../data/europarl-v9.clean.en",
+            "trg_path": "../data/europarl-v9.clean.de",
+            "limit": 2048
+          }
+        }
+      ],
+      "dataloader": {
+        "batch_size": 16,
+        "num_workers": 8,
+        "batch_sampler": {
+          "type": "BucketSampler",
+          "args": {
+            "n_bins": 35
+          }
+        },
+        "collate_fn": {
+          "type": "PadCollatorFn",
+          "args": {
+            "padding_value": 0
+          }
+        }
+      }
+    }
+  },
+  "criterion": {
+    "type": "CrossEntropyLoss",
+    "args": {
+      "ignore_index": 0
+    }
+  },
+  "trainer": {
+    "num_epochs": 300,
+    "len_epoch": 1000,
+    "max_gradient_norm": 5.0,
+    "save_epoch_step": 20,
+    "log_step": 100,
+    "acc_steps": 4
+  }
+}
