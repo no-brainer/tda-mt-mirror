@@ -3,16 +3,17 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 
-from src.base import BaseTranslator
+from src.base import BaseTranslator, BaseModel, BaseTokenizer
 
 
 class BeamSearchTranslator(BaseTranslator):
 
-    def __init__(self, beam_size: int = 5, temperature: float = 1., *args, **kwargs):
+    def __init__(self, model: BaseModel, tokenizer: BaseTokenizer, device: str, eos_id: int = 1,
+                 max_length: int = 512, beam_size: int = 5, temperature: float = 1.):
         self.beam_size = beam_size
         self.temperature = temperature
 
-        super(BeamSearchTranslator, self).__init__(*args, **kwargs)
+        super(BeamSearchTranslator, self).__init__(model, tokenizer, device, eos_id, max_length)
 
     @staticmethod
     def _safe_index(arr: list, value: int, default_value: Optional[int] = None):
