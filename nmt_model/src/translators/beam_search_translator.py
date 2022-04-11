@@ -8,12 +8,12 @@ from src.base import BaseTranslator, BaseModel, BaseTokenizer
 
 class BeamSearchTranslator(BaseTranslator):
 
-    def __init__(self, model: BaseModel, tokenizer: BaseTokenizer, device: str, eos_id: int = 1,
+    def __init__(self, model: BaseModel, tokenizer: BaseTokenizer, device: str, bos_id: int = 2, eos_id: int = 3,
                  max_length: int = 512, beam_size: int = 5, temperature: float = 1.):
         self.beam_size = beam_size
         self.temperature = temperature
 
-        super(BeamSearchTranslator, self).__init__(model, tokenizer, device, eos_id, max_length)
+        super(BeamSearchTranslator, self).__init__(model, tokenizer, device, bos_id, eos_id, max_length)
 
     @staticmethod
     def _safe_index(arr: list, value: int, default_value: Optional[int] = None):
@@ -27,7 +27,7 @@ class BeamSearchTranslator(BaseTranslator):
         src_encoded = torch.as_tensor(self.tokenizer.encode_src(src_sent), dtype=torch.long)
 
         top_beams = [
-            ([1], 0.),
+            ([self.bos_id], 0.),
         ]
 
         batch = {

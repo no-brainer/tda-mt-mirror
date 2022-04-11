@@ -25,10 +25,11 @@ def main(args):
 
     tokenizer = init_obj(src.tokenizers, training_config["tokenizer"])
     if args.translator_type == "greedy":
-        translator = src.translators.GreedyTranslator(model, tokenizer, device, args.eos_id, args.max_length)
+        translator = src.translators.GreedyTranslator(model, tokenizer, device, args.bos_id, args.eos_id,
+                                                      args.max_length)
     elif args.translator_type == "beam_search":
-        translator = src.translators.BeamSearchTranslator(model, tokenizer, device, args.eos_id, args.max_length,
-                                                          args.beam_size, args.temperature)
+        translator = src.translators.BeamSearchTranslator(model, tokenizer, device, args.bos_id, args.eos_id,
+                                                          args.max_length, args.beam_size, args.temperature)
     else:
         raise ValueError(f"Invalid translator type: {args.translator_type}")
 
@@ -53,7 +54,8 @@ if __name__ == "__main__":
     parser.add_argument("--not_use_cuda", dest="use_cuda", action="store_false")
 
     parser.add_argument("--max_length", "-l", type=int, default=512)
-    parser.add_argument("--eos_id", "-e", type=int, default=1)
+    parser.add_argument("--bos_id", "-b", type=int, default=2)
+    parser.add_argument("--eos_id", "-e", type=int, default=3)
     parser.add_argument("--beam_size", "-b", type=int, default=5)
     parser.add_argument("--temperature", "-t", type=float, default=1.)
 

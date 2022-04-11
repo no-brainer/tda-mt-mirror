@@ -6,7 +6,7 @@ from src.base import BaseTranslator
 class GreedyTranslator(BaseTranslator):
 
     def translate(self, src_sent: str) -> str:
-        prediction = [1]
+        prediction = [self.bos_id]
         src_encoded = torch.as_tensor(self.tokenizer.encode_src(src_sent), dtype=torch.long)
 
         batch = dict(
