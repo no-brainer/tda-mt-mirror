@@ -54,8 +54,8 @@ if __name__ == "__main__":
     parser.add_argument("--not_use_cuda", dest="use_cuda", action="store_false")
 
     parser.add_argument("--max_length", "-l", type=int, default=512)
-    parser.add_argument("--bos_id", "-b", type=int, default=2)
-    parser.add_argument("--eos_id", "-e", type=int, default=3)
+    parser.add_argument("--bos_id", type=int, default=2)
+    parser.add_argument("--eos_id", type=int, default=3)
     parser.add_argument("--beam_size", "-b", type=int, default=5)
     parser.add_argument("--temperature", "-t", type=float, default=1.)
 
