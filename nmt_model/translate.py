@@ -18,7 +18,7 @@ def main(args):
 
     set_seed(training_config["seed"])
 
-    saved_data = torch.load(args.src_checkpoint_path, map_location="cpu")
+    saved_data = torch.load(args.checkpoint_path, map_location="cpu")
     model = NMTTransformer(**training_config["model"])
     model.load_state_dict(saved_data["state_dict"])
     model = model.to(device)

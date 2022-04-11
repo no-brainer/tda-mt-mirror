@@ -31,7 +31,7 @@ class BeamSearchTranslator(BaseTranslator):
         ]
 
         batch = {
-            "src_encoded": src_encoded.unsqueeze(0).to(self.device),
+            "src_enc": src_encoded.unsqueeze(0).to(self.device),
             "src_length": torch.as_tensor([src_encoded.size(-1)], dtype=torch.long)
         }
         for i in range(self.max_length):
@@ -39,10 +39,10 @@ class BeamSearchTranslator(BaseTranslator):
             trg_lengths = [self._safe_index(trg, self.eos_id, len(trg)) for trg in trgs]
 
             if len(top_beams) != batch["src_encoded"].size(0):
-                batch["src_encoded"] = torch.tile(batch["src_encoded"], (self.beam_size, 1))
+                batch["src_enc"] = torch.tile(batch["src_enc"], (self.beam_size, 1))
                 batch["src_length"] = torch.tile(batch["src_length"], (self.beam_size,))
 
-            batch["trg_encoded"] = torch.as_tensor(trgs, dtype=torch.long).to(self.device)
+            batch["trg_enc"] = torch.as_tensor(trgs, dtype=torch.long).to(self.device)
             batch["trg_length"] = torch.as_tensor(trg_lengths, dtype=torch.long)
 
             if torch.all(batch["trg_length"] <= i):

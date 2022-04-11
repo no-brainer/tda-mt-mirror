@@ -10,11 +10,11 @@ class GreedyTranslator(BaseTranslator):
         src_encoded = torch.as_tensor(self.tokenizer.encode_src(src_sent), dtype=torch.long)
 
         batch = dict(
-            src_encoded=src_encoded.unsqueeze(0).to(self.device),
+            src_enc=src_encoded.unsqueeze(0).to(self.device),
             src_length=torch.as_tensor([src_encoded.size(-1)], dtype=torch.long),
         )
         for _ in range(self.max_length):
-            batch["trg_encoded"] = torch.as_tensor([prediction], dtype=torch.long).to(self.device)
+            batch["trg_enc"] = torch.as_tensor([prediction], dtype=torch.long).to(self.device)
             batch["trg_length"] = torch.as_tensor([len(prediction)], dtype=torch.long)
 
             output = self.model(**batch)
