@@ -11,11 +11,11 @@ class GreedyTranslator(BaseTranslator):
 
         batch = dict(
             src_enc=src_encoded.unsqueeze(0).to(self.device),
-            src_length=torch.as_tensor([src_encoded.size(-1)], dtype=torch.long),
+            src_enc_length=torch.as_tensor([src_encoded.size(-1)], dtype=torch.long),
         )
         for _ in range(self.max_length):
             batch["trg_enc"] = torch.as_tensor([prediction], dtype=torch.long).to(self.device)
-            batch["trg_length"] = torch.as_tensor([len(prediction)], dtype=torch.long)
+            batch["trg_enc_length"] = torch.as_tensor([len(prediction)], dtype=torch.long)
 
             output = self.model(**batch)
 
