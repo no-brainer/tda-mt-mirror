@@ -2,13 +2,13 @@
   "logging_project_name": "tda_nmt_models",
   "seed": 3407,
   "model": {
-    "input_vocab_size": 10000,
-    "d_model": 256,
-    "nhead": 8,
+    "input_vocab_size": 3500,
+    "d_model": 128,
+    "nhead": 4,
     "num_encoder_layers": 4,
     "num_decoder_layers": 4,
-    "dim_feedforward": 512,
-    "dropout_transformer": 0.2
+    "dim_feedforward": 128,
+    "dropout_transformer": 0.1
   },
   "optimizer": {
     "type": "AdamW",
@@ -30,20 +30,24 @@
   "tokenizer": {
     "type": "SeparateVocabTokenizer",
     "args": {
-      "save_path": "./data/tokenizers/separate_bpe10k",
+      "save_path": "./data/tokenizers/separate_bpe3_5k",
       "src_model_args": {
         "data": "../data/corpus.clean.en_ru.1m.en",
-        "vocab_size": 10000,
+        "vocab_size": 3500,
         "coverage": 0.9999,
         "pad_id": 0,
-        "unk_id": 1
+        "unk_id": 1,
+        "bos_id": 2,
+        "eos_id": 3
       },
       "trg_model_args": {
         "data": "../data/corpus.clean.en_ru.1m.ru",
-        "vocab_size": 10000,
+        "vocab_size": 3500,
         "coverage": 0.9999,
         "pad_id": 0,
-        "unk_id": 1
+        "unk_id": 1,
+        "bos_id": 2,
+        "eos_id": 3
       }
     }
   },
@@ -54,13 +58,12 @@
           "type": "CustomDataset",
           "args": {
             "src_path": "../data/noisy.en_ru.en",
-            "trg_path": "../data/noisy.en_ru.ru",
-            "split": "train"
+            "trg_path": "../data/noisy.en_ru.ru"
           }
         }
       ],
       "dataloader": {
-        "batch_size": 32,
+        "batch_size": 16,
         "num_workers": 8,
         "batch_sampler": {
           "type": "BucketSampler",
@@ -83,12 +86,12 @@
           "args": {
             "src_path": "../data/corpus.clean.en_ru.1m.en",
             "trg_path": "../data/corpus.clean.en_ru.1m.ru",
-            "split": "val"
+            "limit": 2048
           }
         }
       ],
       "dataloader": {
-        "batch_size": 32,
+        "batch_size": 16,
         "num_workers": 8,
         "batch_sampler": {
           "type": "BucketSampler",
@@ -115,6 +118,8 @@
     "num_epochs": 300,
     "len_epoch": 1000,
     "max_gradient_norm": 5.0,
-    "save_epoch_step": 20
+    "save_epoch_step": 20,
+    "log_step": 100,
+    "acc_steps": 4
   }
 }
