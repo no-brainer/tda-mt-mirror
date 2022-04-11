@@ -10,10 +10,8 @@ def main(args):
     with open(args.input_dataset, "r") as in_file, \
             open(args.output_dataset, "w") as out_file:
         for sent in in_file:
-            sent = sent.decode("utf-8")
             sent = unicodedata.normalize("NFC", sent)
             sent = sent.lower()
-            sent = sent.encode("utf-8")
             out_file.write(sent)
 
 
