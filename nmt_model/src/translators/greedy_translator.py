@@ -24,4 +24,5 @@ class GreedyTranslator(BaseTranslator):
             if next_value == self.eos_id:  # end of string
                 break
 
+        prediction = prediction[1:len(prediction) - 1]
         return self.tokenizer.decode_trg(prediction)

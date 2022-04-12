@@ -68,6 +68,6 @@ class BeamSearchTranslator(BaseTranslator):
 
         prediction = top_beams[0][0]
         prediction_length = self._safe_index(prediction, self.eos_id, len(prediction))
-        prediction = prediction[:prediction_length]
+        prediction = prediction[1:prediction_length - 1]
 
         return self.tokenizer.decode_trg(prediction)
