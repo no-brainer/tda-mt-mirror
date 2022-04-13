@@ -2,29 +2,31 @@
   "logging_project_name": "tda_nmt_models",
   "seed": 3407,
   "model": {
-    "input_vocab_size": 3500,
-    "d_model": 128,
-    "nhead": 4,
-    "num_encoder_layers": 4,
-    "num_decoder_layers": 4,
-    "dim_feedforward": 128,
-    "dropout_transformer": 0.1
+    "src_vocab_size": 3500,
+    "trg_vocab_size": 3500,
+    "d_model": 256,
+    "nhead": 8,
+    "num_encoder_layers": 6,
+    "num_decoder_layers": 6,
+    "dim_feedforward": 256,
+    "dropout_transformer": 0.1,
+    "padding_idx": 0,
+    "max_length": 512,
+    "emb_type": "separate"
   },
   "optimizer": {
     "type": "AdamW",
     "args": {
-      "lr": 3e-3,
+      "lr": 0,
       "weight_decay": 1e-6,
       "betas": [0.9, 0.98]
     }
   },
   "scheduler": {
-    "type": "OneCycleLR",
+    "type": "WarmupScheduler",
     "args": {
-      "max_lr": 2e-4,
-      "pct_start": 0.3,
-      "epochs": 300,
-      "steps_per_epoch": 1000
+      "model_size": 256,
+      "warmup_steps": 8000
     }
   },
   "tokenizer": {
@@ -32,7 +34,7 @@
     "args": {
       "save_path": "./data/tokenizers/separate_bpe3_5k",
       "src_model_args": {
-        "data": "../data/corpus.clean.en_ru.1m.en",
+        "data": "../data/corpus.clean.en_ru.1m.ru",
         "vocab_size": 3500,
         "coverage": 0.9999,
         "pad_id": 0,
@@ -41,7 +43,7 @@
         "eos_id": 3
       },
       "trg_model_args": {
-        "data": "../data/corpus.clean.en_ru.1m.ru",
+        "data": "../data/corpus.clean.en_ru.1m.en",
         "vocab_size": 3500,
         "coverage": 0.9999,
         "pad_id": 0,
@@ -57,13 +59,13 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/noisy.en_ru.en",
-            "trg_path": "../data/noisy.en_ru.ru"
+            "src_path": "../data/noisy.en_ru.ru",
+            "trg_path": "../data/noisy.en_ru.en"
           }
         }
       ],
       "dataloader": {
-        "batch_size": 16,
+        "batch_size": 8,
         "num_workers": 8,
         "batch_sampler": {
           "type": "BucketSampler",
@@ -84,14 +86,14 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/corpus.clean.en_ru.1m.en",
-            "trg_path": "../data/corpus.clean.en_ru.1m.ru",
+            "src_path": "../data/corpus.clean.en_ru.1m.ru",
+            "trg_path": "../data/corpus.clean.en_ru.1m.en",
             "limit": 2048
           }
         }
       ],
       "dataloader": {
-        "batch_size": 16,
+        "batch_size": 8,
         "num_workers": 8,
         "batch_sampler": {
           "type": "BucketSampler",
