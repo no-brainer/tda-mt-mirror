@@ -10,7 +10,8 @@ class NMTTransformer(BaseModel):
 
     def __init__(
             self,
-            input_vocab_size: int,
+            trg_vocab_size: int,
+            src_vocab_size: int,
             d_model: int,
             nhead: int,
             num_encoder_layers: int,
@@ -23,10 +24,17 @@ class NMTTransformer(BaseModel):
         super().__init__()
 
         activation = kwargs.get("activation", "gelu")
-        padding_idx = kwargs.get("padding_idx", input_vocab_size)
+        padding_idx = kwargs.get("padding_idx", 0)
 
-        self.embs = nn.Embedding(input_vocab_size + 1, d_model, padding_idx=padding_idx)
-        self.pos_enc = PositionalEncoding(d_model, dropout_enc)
+        self.trg_embs = nn.Embedding(trg_vocab_size, d_model, padding_idx=padding_idx)
+        emb_type = kwargs.get("emb_type", "shared")
+        if emb_type == "shared":
+            self.src_embs = self.trg_embs
+        else:
+            self.src_embs = nn.Embedding(src_vocab_size, d_model, padding_idx=padding_idx)
+
+        max_length = kwargs.get("max_length", 512)
+        self.pos_enc = PositionalEncoding(d_model, dropout_enc, max_len=max_length)
 
         custom_encoder = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(d_model, nhead, dim_feedforward, activation=activation,
@@ -43,15 +51,15 @@ class NMTTransformer(BaseModel):
             d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward, dropout_transformer,
             activation, batch_first=True, custom_encoder=custom_encoder, custom_decoder=custom_decoder
         )
-        self.decoder = nn.Linear(d_model, input_vocab_size + 1)
+        self.decoder = nn.Linear(d_model, trg_vocab_size)
 
     @staticmethod
     def _length_mask(max_size: int, lengths: torch.LongTensor) -> torch.Tensor:
         return torch.arange(max_size)[None, :] >= lengths.view(-1, 1)
 
     def forward(self, src_enc, trg_enc, *args, **kwargs):
-        src_emb = self.pos_enc(self.embs(src_enc))
-        trg_emb = self.pos_enc(self.embs(trg_enc))
+        src_emb = self.pos_enc(self.src_embs(src_enc))
+        trg_emb = self.pos_enc(self.trg_embs(trg_enc))
 
         device = src_enc.device
 
