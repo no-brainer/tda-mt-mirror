@@ -1,1 +1,4 @@
 numpy
+pymorphy2>=0.8
+spacy>=2.2.4
+
