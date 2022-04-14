@@ -36,20 +36,9 @@ class NMTTransformer(BaseModel):
         max_length = kwargs.get("max_length", 512)
         self.pos_enc = PositionalEncoding(d_model, dropout_enc, max_len=max_length)
 
-        custom_encoder = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model, nhead, dim_feedforward, activation=activation,
-                                       dropout=dropout_transformer, batch_first=True),
-            num_encoder_layers
-        )
-        custom_decoder = nn.TransformerDecoder(
-            nn.TransformerDecoderLayer(d_model, nhead, dim_feedforward, activation=activation,
-                                       dropout=dropout_transformer, batch_first=True),
-            num_decoder_layers
-        )
-
         self.transformer = nn.Transformer(
             d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward, dropout_transformer,
-            activation, batch_first=True, custom_encoder=custom_encoder, custom_decoder=custom_decoder
+            activation, batch_first=True
         )
         self.decoder = nn.Linear(d_model, trg_vocab_size)
 
@@ -63,19 +52,15 @@ class NMTTransformer(BaseModel):
 
         device = src_enc.device
 
-        src_mask = self.transformer.generate_square_subsequent_mask(src_emb.size(1))
         trg_mask = self.transformer.generate_square_subsequent_mask(trg_emb.size(1))
-        src_mask, trg_mask = src_mask.to(device), trg_mask.to(device)
+        trg_mask = trg_mask.to(device)
 
-        src_padding_mask = self._length_mask(src_emb.size(1), kwargs["src_enc_length"])
-        src_padding_mask = src_padding_mask.to(device)
-        trg_padding_mask = self._length_mask(trg_emb.size(1), kwargs["trg_enc_length"])
-        trg_padding_mask = trg_padding_mask.to(device)
+        src_padding_mask = self._length_mask(src_emb.size(1), kwargs["src_enc_length"]).to(device)
+        trg_padding_mask = self._length_mask(trg_emb.size(1), kwargs["trg_enc_length"]).to(device)
 
         out = self.transformer(
             src_emb,
             trg_emb,
-            src_mask=src_mask,
             tgt_mask=trg_mask,
             src_key_padding_mask=src_padding_mask,
             tgt_key_padding_mask=trg_padding_mask,
