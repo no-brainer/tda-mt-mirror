@@ -1,48 +1,45 @@
 {
   "logging_project_name": "tda_nmt_models",
-  "seed": 3407,
+  "seed": 42,
   "model": {
-    "input_vocab_size": 3500,
-    "d_model": 128,
-    "nhead": 4,
-    "num_encoder_layers": 4,
-    "num_decoder_layers": 4,
-    "dim_feedforward": 128,
-    "dropout_transformer": 0.1
+    "src_vocab_size": 5000,
+    "trg_vocab_size": 5000,
+    "d_model": 512,
+    "nhead": 8,
+    "num_encoder_layers": 6,
+    "num_decoder_layers": 6,
+    "dim_feedforward": 2048,
+    "dropout_transformer": 0.1,
+    "padding_idx": 0,
+    "max_length": 512,
+    "emb_type": "shared"
   },
   "optimizer": {
     "type": "AdamW",
     "args": {
-      "lr": 3e-3,
+      "lr": 0,
       "weight_decay": 1e-6,
       "betas": [0.9, 0.98]
     }
   },
   "scheduler": {
-    "type": "OneCycleLR",
+    "type": "WarmupScheduler",
     "args": {
-      "max_lr": 2e-4,
-      "pct_start": 0.3,
-      "epochs": 300,
-      "steps_per_epoch": 1000
+      "model_size": 512,
+      "factor": 1.2,
+      "warmup_steps": 10000
     }
   },
   "tokenizer": {
-    "type": "SeparateVocabTokenizer",
+    "type": "SharedVocabTokenizer",
     "args": {
-      "save_path": "./data/tokenizers/de_en-separate_bpe-3_5k",
-      "src_model_args": {
-        "data": "../data/europarl-v9.clean.en",
-        "vocab_size": 3500,
-        "coverage": 0.9999,
-        "pad_id": 0,
-        "unk_id": 1,
-        "bos_id": 2,
-        "eos_id": 3
-      },
-      "trg_model_args": {
-        "data": "../data/europarl-v9.clean.de",
-        "vocab_size": 3500,
+      "save_path": "../data/tokenizers/de_en-shared_bpe-5k",
+      "model_args": {
+        "data": [
+          "../data/clean.europarl.train.de-en.de",
+          "../data/clean.europarl.train.de-en.en"
+        ],
+        "vocab_size": 5000,
         "coverage": 0.9999,
         "pad_id": 0,
         "unk_id": 1,
@@ -57,18 +54,19 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/noisy.en_de.en",
-            "trg_path": "../data/noisy.en_de.de"
+            "src_path": "../data/noisy.europarl.de-en.de",
+            "trg_path": "../data/noisy.europarl.de-en.en",
+            "max_length": 256
           }
         }
       ],
       "dataloader": {
-        "batch_size": 16,
-        "num_workers": 8,
+        "batch_size": 32,
+        "num_workers": 2,
         "batch_sampler": {
           "type": "BucketSampler",
           "args": {
-            "n_bins": 35
+            "n_bins": 64
           }
         },
         "collate_fn": {
@@ -84,21 +82,15 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/europarl-v9.clean.en",
-            "trg_path": "../data/europarl-v9.clean.de",
-            "limit": 2048
+            "src_path": "../data/clean.europarl.valid.de-en.de",
+            "trg_path": "../data/clean.europarl.valid.de-en.de",
+            "max_length": 256
           }
         }
       ],
       "dataloader": {
-        "batch_size": 16,
-        "num_workers": 8,
-        "batch_sampler": {
-          "type": "BucketSampler",
-          "args": {
-            "n_bins": 35
-          }
-        },
+        "batch_size": 32,
+        "num_workers": 2,
         "collate_fn": {
           "type": "PadCollatorFn",
           "args": {
@@ -117,9 +109,10 @@
   "trainer": {
     "num_epochs": 300,
     "len_epoch": 1000,
-    "max_gradient_norm": 5.0,
+    "max_gradient_norm": 2.5,
     "save_epoch_step": 20,
     "log_step": 100,
-    "acc_steps": 4
+    "acc_steps": 1
   }
 }
+
