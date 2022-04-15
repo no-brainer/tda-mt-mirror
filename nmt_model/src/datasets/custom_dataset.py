@@ -10,6 +10,8 @@ class CustomDataset(BaseDataset):
         with open(src_path, "r") as src_file, \
                 open(trg_path, "r") as trg_file:
             for i, (src_sent, trg_sent) in enumerate(zip(src_file, trg_file), 1):
+                if len(src_sent) == 0 or len(trg_sent) == 0:
+                    continue
                 examples.append((src_sent, trg_sent))
 
         super(CustomDataset, self).__init__(examples, tokenizer, max_length, limit)
