@@ -24,14 +24,14 @@ class NMTTransformer(BaseModel):
         super().__init__()
 
         activation = kwargs.get("activation", "gelu")
-        padding_idx = kwargs.get("padding_idx", 0)
+        self.padding_idx = kwargs.get("padding_idx", 0)
 
-        self.trg_embs = nn.Embedding(trg_vocab_size, d_model, padding_idx=padding_idx)
+        self.trg_embs = nn.Embedding(trg_vocab_size, d_model, padding_idx=self.padding_idx)
         emb_type = kwargs.get("emb_type", "shared")
         if emb_type == "shared":
             self.src_embs = self.trg_embs
         else:
-            self.src_embs = nn.Embedding(src_vocab_size, d_model, padding_idx=padding_idx)
+            self.src_embs = nn.Embedding(src_vocab_size, d_model, padding_idx=self.padding_idx)
 
         max_length = kwargs.get("max_length", 512)
         self.pos_enc = PositionalEncoding(d_model, dropout_enc, max_len=max_length)
@@ -42,9 +42,8 @@ class NMTTransformer(BaseModel):
         )
         self.decoder = nn.Linear(d_model, trg_vocab_size)
 
-    @staticmethod
-    def _length_mask(max_size: int, lengths: torch.LongTensor) -> torch.Tensor:
-        return torch.arange(max_size)[None, :] >= lengths.view(-1, 1)
+    def _length_mask(self, tokenized_text: torch.Tensor) -> torch.Tensor:
+        return tokenized_text == self.padding_idx
 
     def forward(self, src_enc, trg_enc, src_enc_length, trg_enc_length, *args, **kwargs):
         src_emb = self.pos_enc(self.src_embs(src_enc))
@@ -55,8 +54,8 @@ class NMTTransformer(BaseModel):
         trg_mask = self.transformer.generate_square_subsequent_mask(trg_emb.size(1))
         trg_mask = trg_mask.to(device)
 
-        src_padding_mask = self._length_mask(src_emb.size(1), src_enc_length).to(device)
-        trg_padding_mask = self._length_mask(trg_emb.size(1), trg_enc_length).to(device)
+        src_padding_mask = self._length_mask(src_enc).to(device)
+        trg_padding_mask = self._length_mask(trg_enc).to(device)
 
         out = self.transformer(
             src_emb,
