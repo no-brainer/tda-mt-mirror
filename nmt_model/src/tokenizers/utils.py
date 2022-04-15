@@ -23,6 +23,7 @@ def prepare_tokenizer(save_dirpath: str, model_args: Dict) -> yttm.BPE:
         with open(tmp_path, "w") as tmp_file:
             for file_path in model_args["data"]:
                 dump_lines(tmp_file, file_path)
+        model_args["data"] = tmp_path
 
     os.makedirs(save_dirpath, exist_ok=True)
     tokenizer = yttm.BPE.train(model=tokenizer_file, **model_args)
