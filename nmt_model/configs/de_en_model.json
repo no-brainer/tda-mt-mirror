@@ -83,7 +83,7 @@
           "type": "CustomDataset",
           "args": {
             "src_path": "../data/clean.europarl.valid.de-en.de",
-            "trg_path": "../data/clean.europarl.valid.de-en.de",
+            "trg_path": "../data/clean.europarl.valid.de-en.en",
             "max_length": 256
           }
         }
