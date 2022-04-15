@@ -24,9 +24,7 @@ class Trainer:
         self.dataset = train_dataloader.dataset
         if self.len_epoch is None:
             self.len_epoch = len(train_dataloader)
-            self.train_dataloader = train_dataloader
-        else:
-            self.train_dataloader = inf_loop(train_dataloader)
+        self.train_dataloader = inf_loop(train_dataloader)
 
         self.val_dataloader = val_dataloader
 
@@ -77,10 +75,7 @@ class Trainer:
 
         batch = self.move_batch_to_device(batch, self.device)
         outputs = self.model(**batch)
-        loss = self.criterion(
-            outputs.transpose(1, 2)[:, :, :-1],
-            batch["trg_enc"][:, 1:]
-        )
+        loss = self.criterion(outputs.transpose(1, 2)[:, :, :-1], batch["trg_enc"][:, 1:])
         loss.backward()
 
         self.model.zero_grad()

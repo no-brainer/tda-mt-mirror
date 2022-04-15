@@ -22,6 +22,7 @@ def main(args):
     set_seed(training_config["seed"])
 
     model = NMTTransformer(**training_config["model"]).to(device)
+    print(model)
     optimizer = init_obj(torch.optim, training_config["optimizer"], params=model.parameters())
     scheduler = init_obj(
         [src.schedulers, torch.optim.lr_scheduler],
