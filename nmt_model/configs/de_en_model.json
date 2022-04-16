@@ -9,25 +9,24 @@
     "num_encoder_layers": 6,
     "num_decoder_layers": 6,
     "dim_feedforward": 1024,
-    "dropout_transformer": 0.2,
+    "dropout_transformer": 0.1,
+    "dropout_enc": 0.1,
     "padding_idx": 0,
     "max_length": 512,
     "emb_type": "shared"
   },
   "optimizer": {
-    "type": "AdamW",
+    "type": "Adam",
     "args": {
-      "lr": 0,
-      "weight_decay": 1e-5
+      "lr": 0
     }
   },
   "scheduler": {
-    "type": "OneCycleLR",
+    "type": "WarmupScheduler",
     "args": {
-      "max_lr": 5e-4,
-      "pct_start": 0.15,
-      "epochs": 300,
-      "steps_per_epoch": 1000
+      "factor": 1.2,
+      "model_size": 512,
+      "warmup_steps": 8000
     }
   },
   "tokenizer": {
@@ -36,8 +35,8 @@
       "save_path": "../data/tokenizers/de_en-shared_bpe-10k",
       "model_args": {
         "data": [
-          "../data/noisy.europarl.de-en.de",
-          "../data/noisy.europarl.de-en.en"
+          "../data/noisy.de-en.de",
+          "../data/noisy.de-en.en"
         ],
         "vocab_size": 10000,
         "coverage": 0.9999,
@@ -54,8 +53,8 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/noisy.europarl.de-en.de",
-            "trg_path": "../data/noisy.europarl.de-en.en",
+            "src_path": "../data/noisy.de-en.de",
+            "trg_path": "../data/noisy.de-en.en",
             "max_length": 256
           }
         }
@@ -63,12 +62,8 @@
       "dataloader": {
         "batch_size": 32,
         "num_workers": 2,
-        "batch_sampler": {
-          "type": "BucketSampler",
-          "args": {
-            "n_bins": 64
-          }
-        },
+        "shuffle": true,
+        "drop_last": true,
         "collate_fn": {
           "type": "PadCollatorFn",
           "args": {
@@ -82,8 +77,8 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/clean.europarl.valid.de-en.de",
-            "trg_path": "../data/clean.europarl.valid.de-en.en",
+            "src_path": "../data/data/valid.de-en.de",
+            "trg_path": "../data/data/valid.de-en.en",
             "max_length": 256
           }
         }
@@ -103,12 +98,11 @@
   "criterion": {
     "type": "CrossEntropyLoss",
     "args": {
-      "ignore_index": 0,
-      "label_smoothing": 0.1
+      "ignore_index": 0
     }
   },
   "trainer": {
-    "num_epochs": 300,
+    "num_epochs": 200,
     "len_epoch": 1000,
     "max_gradient_norm": 2.0,
     "save_epoch_step": 20,
