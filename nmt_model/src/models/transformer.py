@@ -33,6 +33,8 @@ class NMTTransformer(BaseModel):
         else:
             self.src_embs = nn.Embedding(src_vocab_size, d_model, padding_idx=self.padding_idx)
 
+        self.emb_norm = d_model ** -0.5
+
         max_length = kwargs.get("max_length", 512)
         self.pos_enc = PositionalEncoding(d_model, dropout_enc, max_len=max_length)
 
@@ -42,12 +44,19 @@ class NMTTransformer(BaseModel):
         )
         self.decoder = nn.Linear(d_model, trg_vocab_size)
 
+        self.init_params()
+
+    def init_params(self):
+        for param in self.parameters():
+            if param.dim() > 1:
+                nn.init.xavier_uniform_(param)
+
     def _length_mask(self, tokenized_text: torch.Tensor) -> torch.Tensor:
         return tokenized_text == self.padding_idx
 
     def forward(self, src_enc, trg_enc, src_enc_length, trg_enc_length, *args, **kwargs):
-        src_emb = self.pos_enc(self.src_embs(src_enc))
-        trg_emb = self.pos_enc(self.trg_embs(trg_enc))
+        src_emb = self.pos_enc(self.src_embs(src_enc) * self.emb_norm)
+        trg_emb = self.pos_enc(self.trg_embs(trg_enc) * self.emb_norm)
 
         device = src_enc.device
 
@@ -63,5 +72,6 @@ class NMTTransformer(BaseModel):
             tgt_mask=trg_mask,
             src_key_padding_mask=src_padding_mask,
             tgt_key_padding_mask=trg_padding_mask,
+            memory_key_padding_mask=src_padding_mask
         )
         return self.decoder(out)
