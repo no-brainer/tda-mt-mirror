@@ -24,9 +24,9 @@
   "scheduler": {
     "type": "WarmupScheduler",
     "args": {
-      "factor": 1.2,
+      "max_lr": 1e-4,
       "model_size": 512,
-      "warmup_steps": 8000
+      "warmup_steps": 20000
     }
   },
   "tokenizer": {
