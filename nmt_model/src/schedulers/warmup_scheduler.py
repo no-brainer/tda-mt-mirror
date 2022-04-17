@@ -4,8 +4,8 @@ class WarmupScheduler:
         self.optimizer = optimizer
 
         self.warmup_steps = warmup_steps
-        self.factor = max_lr / self._get_rate(warmup_steps)
         self.model_size = model_size
+        self.factor = max_lr / self._get_rate(warmup_steps)
 
         self.cur_step = 0
         self.rate = None
