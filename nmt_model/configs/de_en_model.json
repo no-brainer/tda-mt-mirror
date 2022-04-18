@@ -9,8 +9,8 @@
     "num_encoder_layers": 6,
     "num_decoder_layers": 6,
     "dim_feedforward": 1024,
-    "dropout_transformer": 0.1,
-    "dropout_enc": 0.1,
+    "dropout_transformer": 0.3,
+    "dropout_enc": 0.3,
     "padding_idx": 0,
     "max_length": 512,
     "emb_type": "shared"
@@ -24,9 +24,9 @@
   "scheduler": {
     "type": "WarmupScheduler",
     "args": {
-      "max_lr": 1e-4,
+      "max_lr": 2e-4,
       "model_size": 512,
-      "warmup_steps": 20000
+      "warmup_steps": 32000
     }
   },
   "tokenizer": {
@@ -77,8 +77,8 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/data/valid.de-en.de",
-            "trg_path": "../data/data/valid.de-en.en",
+            "src_path": "../data/valid.de-en.de",
+            "trg_path": "../data/valid.de-en.en",
             "max_length": 256
           }
         }
@@ -102,9 +102,9 @@
     }
   },
   "trainer": {
-    "num_epochs": 200,
+    "num_epochs": 220,
     "len_epoch": 1000,
-    "max_gradient_norm": 2.0,
+    "max_gradient_norm": 3.0,
     "save_epoch_step": 20,
     "log_step": 100,
     "acc_steps": 1
