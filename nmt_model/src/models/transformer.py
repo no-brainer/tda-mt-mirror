@@ -33,7 +33,7 @@ class NMTTransformer(BaseModel):
         else:
             self.src_embs = nn.Embedding(src_vocab_size, d_model, padding_idx=self.padding_idx)
 
-        self.emb_norm = d_model ** -0.5
+        self.emb_norm = d_model ** 0.5
 
         max_length = kwargs.get("max_length", 512)
         self.pos_enc = PositionalEncoding(d_model, dropout_enc, max_len=max_length)
