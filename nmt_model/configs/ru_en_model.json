@@ -1,41 +1,41 @@
 {
   "logging_project_name": "tda_nmt_models",
-  "seed": 3407,
+  "seed": 42,
   "model": {
-    "src_vocab_size": 3500,
-    "trg_vocab_size": 3500,
-    "d_model": 256,
-    "nhead": 8,
+    "src_vocab_size": 10000,
+    "trg_vocab_size": 10000,
+    "d_model": 512,
+    "nhead": 4,
     "num_encoder_layers": 6,
     "num_decoder_layers": 6,
-    "dim_feedforward": 256,
-    "dropout_transformer": 0.1,
+    "dim_feedforward": 1024,
+    "dropout_transformer": 0.2,
+    "dropout_enc": 0.2,
     "padding_idx": 0,
     "max_length": 512,
-    "emb_type": "separate"
+    "emb_type": "shared"
   },
   "optimizer": {
-    "type": "AdamW",
+    "type": "Adam",
     "args": {
-      "lr": 0,
-      "weight_decay": 1e-6,
-      "betas": [0.9, 0.98]
+      "lr": 0
     }
   },
   "scheduler": {
     "type": "WarmupScheduler",
     "args": {
-      "model_size": 256,
-      "warmup_steps": 8000
+      "max_lr": 2e-4,
+      "model_size": 512,
+      "warmup_steps": 24000
     }
   },
   "tokenizer": {
     "type": "SeparateVocabTokenizer",
     "args": {
-      "save_path": "./data/tokenizers/separate_bpe3_5k",
+      "save_path": "../data/tokenizers/ru_en-sep_bpe-8k",
       "src_model_args": {
-        "data": "../data/corpus.clean.en_ru.1m.ru",
-        "vocab_size": 3500,
+        "data": "../data/noisy.en-ru.ru",
+        "vocab_size": 10000,
         "coverage": 0.9999,
         "pad_id": 0,
         "unk_id": 1,
@@ -43,8 +43,8 @@
         "eos_id": 3
       },
       "trg_model_args": {
-        "data": "../data/corpus.clean.en_ru.1m.en",
-        "vocab_size": 3500,
+        "data": "../data/noisy.en-ru.ru",
+        "vocab_size": 10000,
         "coverage": 0.9999,
         "pad_id": 0,
         "unk_id": 1,
@@ -59,20 +59,17 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/noisy.en_ru.ru",
-            "trg_path": "../data/noisy.en_ru.en"
+            "src_path": "../data/noisy.en-ru.ru",
+            "trg_path": "../data/noisy.en-ru.en",
+            "max_length": 256
           }
         }
       ],
       "dataloader": {
-        "batch_size": 8,
-        "num_workers": 8,
-        "batch_sampler": {
-          "type": "BucketSampler",
-          "args": {
-            "n_bins": 35
-          }
-        },
+        "batch_size": 32,
+        "num_workers": 2,
+        "shuffle": true,
+        "drop_last": true,
         "collate_fn": {
           "type": "PadCollatorFn",
           "args": {
@@ -86,21 +83,15 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/corpus.clean.en_ru.1m.ru",
-            "trg_path": "../data/corpus.clean.en_ru.1m.en",
-            "limit": 2048
+            "src_path": "../data/clean.paracrawl.valid.en-ru.ru",
+            "trg_path": "../data/clean.paracrawl.valid.en-ru.en",
+            "max_length": 256
           }
         }
       ],
       "dataloader": {
-        "batch_size": 8,
-        "num_workers": 8,
-        "batch_sampler": {
-          "type": "BucketSampler",
-          "args": {
-            "n_bins": 35
-          }
-        },
+        "batch_size": 32,
+        "num_workers": 2,
         "collate_fn": {
           "type": "PadCollatorFn",
           "args": {
@@ -117,11 +108,11 @@
     }
   },
   "trainer": {
-    "num_epochs": 300,
+    "num_epochs": 500,
     "len_epoch": 1000,
-    "max_gradient_norm": 5.0,
+    "max_gradient_norm": 3.0,
     "save_epoch_step": 20,
     "log_step": 100,
-    "acc_steps": 4
+    "acc_steps": 1
   }
 }
