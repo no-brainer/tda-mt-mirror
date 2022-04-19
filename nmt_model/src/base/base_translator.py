@@ -20,6 +20,12 @@ class BaseTranslator:
     def translate(self, src_sent: str) -> str:
         raise NotImplementedError
 
+    def translate_batch(self, src_sents: List[str]) -> List[str]:
+        predictions = []
+        for src_sent in src_sents:
+            predictions.append(self.translate(src_sent))
+        return predictions
+
     @staticmethod
     def _safe_index(arr: List, value: int, default_value: Optional[int] = None):
         try:
