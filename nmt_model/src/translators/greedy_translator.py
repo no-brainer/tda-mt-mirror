@@ -1,6 +1,7 @@
 from typing import List
 
 import torch
+from torch.nn.utils.rnn import pad_sequence
 
 from src.base import BaseTranslator
 
@@ -33,7 +34,7 @@ class GreedyTranslator(BaseTranslator):
         predictions = [[self.bos_id] for _ in range(len(src_sents))]
         src_encoded = self.tokenizer.encode_src(src_sents)
         batch = dict(
-            src_enc=torch.as_tensor(src_encoded, dtype=torch.long).to(self.device),
+            src_enc=pad_sequence(src_encoded, batch_first=True, padding_value=self.pad_id).to(self.device),
             src_enc_length=torch.as_tensor([len(src_enc_sent) for src_enc_sent in src_encoded], dtype=torch.long)
         )
         for i in range(self.max_length):

@@ -7,7 +7,7 @@ from src.base import BaseTranslator, BaseModel, BaseTokenizer
 class BeamSearchTranslator(BaseTranslator):
 
     def __init__(self, model: BaseModel, tokenizer: BaseTokenizer, device: str, bos_id: int = 2, eos_id: int = 3,
-                 max_length: int = 512, beam_size: int = 5, temperature: float = 1.):
+                 pad_id: int = 0, max_length: int = 512, beam_size: int = 5, temperature: float = 1.):
         self.beam_size = beam_size
         self.temperature = temperature
 

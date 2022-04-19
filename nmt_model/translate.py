@@ -49,11 +49,12 @@ def main(args):
 
     tokenizer = init_obj(src.tokenizers, training_config["tokenizer"])
     if args.translator_type == "greedy":
-        translator = src.translators.GreedyTranslator(model, tokenizer, device, args.bos_id, args.eos_id,
+        translator = src.translators.GreedyTranslator(model, tokenizer, device, args.bos_id, args.eos_id, args.pad_id,
                                                       args.max_length)
     elif args.translator_type == "beam_search":
         translator = src.translators.BeamSearchTranslator(model, tokenizer, device, args.bos_id, args.eos_id,
-                                                          args.max_length, args.beam_size, args.temperature)
+                                                          args.pad_id, args.max_length, args.beam_size,
+                                                          args.temperature)
     else:
         raise ValueError(f"Invalid translator type: {args.translator_type}")
 
@@ -76,6 +77,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_length", "-l", type=int, default=512)
     parser.add_argument("--bos_id", type=int, default=2)
     parser.add_argument("--eos_id", type=int, default=3)
+    parser.add_argument("--pad_id", type=int, default=0)
     parser.add_argument("--beam_size", "-b", type=int, default=5)
     parser.add_argument("--temperature", "-t", type=float, default=1.)
 
