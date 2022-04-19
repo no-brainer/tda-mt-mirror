@@ -35,11 +35,23 @@ def main(args):
 
     with open(args.src_datapath, "r") as in_file, \
             open(args.out_datapath, "w") as out_file:
-        for line in in_file:
-            line = line.strip()
-            translation = translator.translate(line)
-            out_file.write(translation)
-            out_file.write("\n")
+
+        while True:
+            line = in_file.readline()
+            if len(line) == 0:
+                break
+
+            batch = []
+            for _ in range(args.batch_size):
+                line = line
+                if len(line) == 0:
+                    break
+                batch.append(line.strip())
+
+            translations = translator.translate_batch(batch)
+            for translation in translations:
+                out_file.write(translation)
+                out_file.write("\n")
 
 
 if __name__ == "__main__":
@@ -53,6 +65,7 @@ if __name__ == "__main__":
     parser.add_argument("--config_path", "-c", type=str, required=True)
     parser.add_argument("--not_use_cuda", dest="use_cuda", action="store_false")
 
+    parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--max_length", "-l", type=int, default=512)
     parser.add_argument("--bos_id", type=int, default=2)
     parser.add_argument("--eos_id", type=int, default=3)
