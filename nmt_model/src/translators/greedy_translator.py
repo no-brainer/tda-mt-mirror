@@ -45,7 +45,7 @@ class GreedyTranslator(BaseTranslator):
 
             output = self.model(**batch)
 
-            next_values = output[:, -1].argmax().cpu().tolist()
+            next_values = output[:, -1].argmax(dim=-1).cpu().tolist()
             for j, next_value in enumerate(next_values):
                 predictions[j].append(next_value)
 
