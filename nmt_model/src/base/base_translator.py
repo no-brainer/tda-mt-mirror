@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Optional, List
 
 from src.base import BaseModel, BaseTokenizer
 
@@ -18,3 +19,11 @@ class BaseTranslator:
     @abstractmethod
     def translate(self, src_sent: str) -> str:
         raise NotImplementedError
+
+    @staticmethod
+    def _safe_index(arr: List, value: int, default_value: Optional[int] = None):
+        try:
+            result = arr.index(value)
+        except ValueError:
+            result = default_value
+        return result

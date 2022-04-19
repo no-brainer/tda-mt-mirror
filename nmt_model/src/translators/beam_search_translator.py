@@ -1,5 +1,3 @@
-from typing import Optional
-
 import torch
 import torch.nn.functional as F
 
@@ -14,14 +12,6 @@ class BeamSearchTranslator(BaseTranslator):
         self.temperature = temperature
 
         super(BeamSearchTranslator, self).__init__(model, tokenizer, device, bos_id, eos_id, max_length)
-
-    @staticmethod
-    def _safe_index(arr: list, value: int, default_value: Optional[int] = None):
-        try:
-            result = arr.index(value)
-        except ValueError:
-            result = default_value
-        return result
 
     def translate(self, src_sent: str) -> str:
         src_encoded = torch.as_tensor(self.tokenizer.encode_src(src_sent), dtype=torch.long)

@@ -1,3 +1,5 @@
+from typing import List
+
 import torch
 
 from src.base import BaseTranslator
@@ -26,3 +28,29 @@ class GreedyTranslator(BaseTranslator):
 
         prediction = prediction[1:len(prediction) - 1]
         return self.tokenizer.decode_trg(prediction)
+
+    def translate_batch(self, src_sents: List[str]) -> List[str]:
+        predictions = [[self.bos_id] for _ in range(len(src_sents))]
+        src_encoded = self.tokenizer.encode_src(src_sents)
+        batch = dict(
+            src_enc=torch.as_tensor(src_encoded, dtype=torch.long).to(self.device),
+            src_enc_length=torch.as_tensor([len(src_enc_sent) for src_enc_sent in src_encoded], dtype=torch.long)
+        )
+        for i in range(self.max_length):
+            batch["trg_enc"] = torch.as_tensor(predictions, dtype=torch.long).to(self.device)
+            trg_lengths = [self._safe_index(trg_sent, self.eos_id, len(trg_sent)) for trg_sent in predictions]
+            batch["trg_enc_length"] = torch.as_tensor(trg_lengths, dtype=torch.long)
+            if torch.all(batch["trg_enc_length"] - 1 < i):
+                break
+
+            output = self.model(**batch)
+
+            next_values = output[:, -1].argmax().cpu().tolist()
+            for j, next_value in enumerate(next_values):
+                predictions[j].append(next_value)
+
+        for i in range(len(predictions)):
+            pred_length = self._safe_index(predictions[i], self.eos_id, len(predictions[i]))
+            predictions[i] = predictions[i][1:pred_length]
+
+        return self.tokenizer.decode_trg(predictions)
