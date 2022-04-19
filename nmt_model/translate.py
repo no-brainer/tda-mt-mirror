@@ -13,17 +13,18 @@ def translate_file(translator, src_datapath, out_datapath, batch_size):
     with open(src_datapath, "r") as in_file, \
             open(out_datapath, "w") as out_file:
 
-        while True:
-            line = in_file.readline()
-            if len(line) == 0:
-                break
-
+        is_eof = False
+        while not is_eof:
             batch = []
             for _ in range(batch_size):
-                line = line
+                line = in_file.readline()
                 if len(line) == 0:
+                    is_eof = True
                     break
                 batch.append(line.strip())
+
+            if len(batch) == 0:
+                continue
 
             translations = translator.translate_batch(batch)
             for translation in translations:
