@@ -8,6 +8,29 @@ import src.translators
 from src.utils import parse_config, set_seed, init_obj
 
 
+@torch.no_grad()
+def translate_file(translator, src_datapath, out_datapath, batch_size):
+    with open(src_datapath, "r") as in_file, \
+            open(out_datapath, "w") as out_file:
+
+        while True:
+            line = in_file.readline()
+            if len(line) == 0:
+                break
+
+            batch = []
+            for _ in range(batch_size):
+                line = line
+                if len(line) == 0:
+                    break
+                batch.append(line.strip())
+
+            translations = translator.translate_batch(batch)
+            for translation in translations:
+                out_file.write(translation)
+                out_file.write("\n")
+
+
 def main(args):
     training_config = parse_config(args.config_path)
 
@@ -33,25 +56,8 @@ def main(args):
     else:
         raise ValueError(f"Invalid translator type: {args.translator_type}")
 
-    with open(args.src_datapath, "r") as in_file, \
-            open(args.out_datapath, "w") as out_file:
-
-        while True:
-            line = in_file.readline()
-            if len(line) == 0:
-                break
-
-            batch = []
-            for _ in range(args.batch_size):
-                line = line
-                if len(line) == 0:
-                    break
-                batch.append(line.strip())
-
-            translations = translator.translate_batch(batch)
-            for translation in translations:
-                out_file.write(translation)
-                out_file.write("\n")
+    model.eval()
+    translate_file(translator, args.src_datapath, args.out_datapath, args.batch_size)
 
 
 if __name__ == "__main__":
