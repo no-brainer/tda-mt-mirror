@@ -2,8 +2,8 @@
   "logging_project_name": "tda_nmt_models",
   "seed": 42,
   "model": {
-    "src_vocab_size": 10000,
-    "trg_vocab_size": 10000,
+    "src_vocab_size": 8000,
+    "trg_vocab_size": 8000,
     "d_model": 512,
     "nhead": 4,
     "num_encoder_layers": 6,
@@ -13,7 +13,7 @@
     "dropout_enc": 0.2,
     "padding_idx": 0,
     "max_length": 512,
-    "emb_type": "shared"
+    "emb_type": "separate"
   },
   "optimizer": {
     "type": "Adam",
@@ -24,7 +24,7 @@
   "scheduler": {
     "type": "WarmupScheduler",
     "args": {
-      "max_lr": 2e-4,
+      "max_lr": 4e-4,
       "model_size": 512,
       "warmup_steps": 24000
     }
@@ -35,7 +35,7 @@
       "save_path": "../data/tokenizers/ru_en-sep_bpe-8k",
       "src_model_args": {
         "data": "../data/noisy.en-ru.ru",
-        "vocab_size": 10000,
+        "vocab_size": 8000,
         "coverage": 0.9999,
         "pad_id": 0,
         "unk_id": 1,
@@ -43,8 +43,8 @@
         "eos_id": 3
       },
       "trg_model_args": {
-        "data": "../data/noisy.en-ru.ru",
-        "vocab_size": 10000,
+        "data": "../data/noisy.en-ru.en",
+        "vocab_size": 8000,
         "coverage": 0.9999,
         "pad_id": 0,
         "unk_id": 1,
@@ -83,8 +83,8 @@
         {
           "type": "CustomDataset",
           "args": {
-            "src_path": "../data/clean.paracrawl.valid.en-ru.ru",
-            "trg_path": "../data/clean.paracrawl.valid.en-ru.en",
+            "src_path": "../data/valid.en-ru.ru",
+            "trg_path": "../data/valid.en-ru.en",
             "max_length": 256
           }
         }
