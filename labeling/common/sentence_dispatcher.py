@@ -45,4 +45,4 @@ class SentencePairDispatcher:
         return result
     
     def extract_unknown(self):
-        return ("", "")
+        return "", ""
