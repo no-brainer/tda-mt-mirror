@@ -1,11 +1,17 @@
 import argparse
 import csv
+from collections import defaultdict
 import curses
 import logging
 import os
+import sys
 import textwrap
 
 import sacrebleu
+
+sys.path.append("../nmt_model")
+import src.tokenizers
+from src.utils import parse_config, init_obj
 
 
 logging.basicConfig(
@@ -39,6 +45,9 @@ class LabelingManager:
         self.trg_datapath = args.trg_datapath
         self.translations_datapath = args.translations_datapath
         self.labels_datapath = args.labels_datapath
+
+        training_config = parse_config(args.config_path)
+        self.tokenizer = init_obj(src.tokenizers, training_config["tokenizer"])
 
     def __call__(self, stdscr):
         curses.curs_set(0)
@@ -84,6 +93,17 @@ class LabelingManager:
         label = stdscr.getkey()
         return label != " "
 
+    @staticmethod
+    def _count_ngrams(tokens, ngram_order):
+        max_count = 0
+        cnt = defaultdict(int)
+        for idx in range(len(tokens) - ngram_order):
+            mark = "_".join(map(str, tokens[idx: idx + ngram_order]))
+            cnt[mark] += 1
+            if cnt[mark] > max_count:
+                max_count = cnt[mark]
+        return max_count
+
     def _run_labeling(self, stdscr, offset, total):
         writer = csv.writer(open(self.labels_datapath, "a+"))
 
@@ -106,7 +126,20 @@ class LabelingManager:
                 stdscr.addstr(f"Translated:\n{wrap_text(tr_sent, cols)}\n\n")
 
                 bleu_score = bleu_metric.sentence_score(tr_sent, [trg_sent])
-                stdscr.addstr(f"BLEU: {bleu_score.score:.6f}")
+                stdscr.addstr(f"BLEU: {bleu_score.score:.6f}\n\n")
+
+                if bleu_score.score > 60.:
+                    stdscr.addstr(f"High BLEU - possibly good?\n\n")
+
+                tokens = self.tokenizer.encode_trg(tr_sent)
+                is_hal = False
+                for ngram_order, count_thresh in [(1, 8), (2, 5), (3, 3)]:
+                    max_ngram_count = self._count_ngrams(tokens, ngram_order)
+                    if max_ngram_count >= count_thresh:
+                        is_hal = True
+
+                if is_hal:
+                    stdscr.addstr(f"Many repeating ngrams - possibly hallucination\n\n")
 
                 stdscr.refresh()
                 keypress = stdscr.getkey()
@@ -131,6 +164,7 @@ if __name__ == "__main__":
     parser.add_argument("trg_datapath", type=str)
     parser.add_argument("translations_datapath", type=str)
     parser.add_argument("labels_datapath", type=str)
+    parser.add_argument("config_path", type=str)
 
     script_args = parser.parse_args()
 
