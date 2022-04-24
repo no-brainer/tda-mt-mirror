@@ -24,7 +24,7 @@ def compute_all_scores(kf, estimator, X, y, epsilon=1e-8):
                 scores[metric_name].append(score)
 
         scores["gmean_recall"].append(
-            np.sqrt(scores["recall_cls0"] * scores["recall_cls1"])
+            np.sqrt(scores["recall_cls0"][-1] * scores["recall_cls1"][-1])
         )
 
         y_probs = estimator.predict_proba(X_test)[:, 1]
