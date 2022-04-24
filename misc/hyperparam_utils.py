@@ -1,27 +1,41 @@
+from collections import defaultdict
+
 import numpy as np
 import sklearn.metrics as metrics
 
 
-def compute_all_scores(estimator, X, y_true, epsilon=1e-8):
-    scores = dict()
+def compute_all_scores(kf, estimator, X, y, epsilon=1e-8):
+    scores = defaultdict(list)
 
-    y_preds = estimator.predict(X)
+    for train_index, test_index in kf.split(X):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
 
-    scores["accuracy"] = metrics.accuracy_score(y_true, y_preds)
-    for metric in ["f1", "precision", "recall"]:
-        scoring_func = getattr(metrics, f"{metric}_score")
-        class_scores = scoring_func(y_true, y_preds, average=None)
-        scores.update({
-            f"{metric}_cls{i}": score for i, score in enumerate(class_scores)
-        })
+        estimator = estimator.fit(X_train, y_train)
 
-    scores["gmean_recall"] = np.sqrt(scores["recall_cls0"] * scores["recall_cls1"])
+        y_preds = estimator.predict(X_test)
 
-    y_probs = estimator.predict_proba(X)[:, 1]
-    scores["bss"] = metrics.brier_score_loss(y_true, y_probs)
-    scores["roc_auc"] = metrics.roc_auc_score(y_true, y_probs)
+        scores["accuracy"].append(metrics.accuracy_score(y_test, y_preds))
+        for metric in ["f1", "precision", "recall"]:
+            scoring_func = getattr(metrics, f"{metric}_score")
+            class_scores = scoring_func(y_test, y_preds, average=None)
+            for i, score in enumerate(class_scores):
+                metric_name = f"{metric}_cls{i}"
+                scores[metric_name].append(score)
 
-    return scores
+        scores["gmean_recall"].append(
+            np.sqrt(scores["recall_cls0"] * scores["recall_cls1"])
+        )
+
+        y_probs = estimator.predict_proba(X_test)[:, 1]
+        scores["bss"].append(metrics.brier_score_loss(y_test, y_probs))
+        scores["roc_auc"].append(metrics.roc_auc_score(y_test, y_probs))
+
+    final_results = dict()
+    for metric_name, fold_scores in scores.items():
+        final_results[metric_name] = np.mean(fold_scores)
+
+    return final_results
 
 
 def restore_params(best_params, search_space):
