@@ -1,3 +1,29 @@
+import numpy as np
+import sklearn.metrics as metrics
+
+
+def compute_all_scores(estimator, X, y_true, epsilon=1e-8):
+    scores = dict()
+
+    y_preds = estimator.predict(X)
+
+    scores["accuracy"] = metrics.accuracy_score(y_true, y_preds)
+    for metric in ["f1", "precision", "recall"]:
+        scoring_func = getattr(metrics, f"{metric}_score")
+        class_scores = scoring_func(y_true, y_preds, average=None)
+        scores.update({
+            f"{metric}_cls{i}": score for i, score in enumerate(class_scores)
+        })
+
+    scores["gmean_recall"] = np.sqrt(scores["recall_cls0"] * scores["recall_cls1"])
+
+    y_probs = estimator.predict_proba(X)[:, 1]
+    scores["bss"] = metrics.brier_score_loss(y_true, y_probs)
+    scores["roc_auc"] = metrics.roc_auc_score(y_true, y_probs)
+
+    return scores
+
+
 def restore_params(best_params, search_space):
     full_params = best_params.copy()
     for name, params in search_space.items():
