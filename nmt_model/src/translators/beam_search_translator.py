@@ -13,6 +13,7 @@ class BeamSearchTranslator(BaseTranslator):
 
         super(BeamSearchTranslator, self).__init__(model, tokenizer, device, bos_id, eos_id, max_length)
 
+    @torch.no_grad()
     def translate(self, src_sent: str) -> str:
         src_encoded = torch.as_tensor(self.tokenizer.encode_src(src_sent), dtype=torch.long)
 

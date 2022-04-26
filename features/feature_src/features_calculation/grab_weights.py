@@ -1,9 +1,11 @@
 import os
+from pathlib import Path
 import re
-import numpy as np
 
+import numpy as np
 from tqdm.notebook import tqdm
 from transformers import BertTokenizer, BertModel
+
 
 def grab_attention_weights(model, tokenizer, sentences, MAX_LEN, device='cuda:0'):
     inputs = tokenizer.batch_encode_plus([text_preprocessing(s) for s in sentences],
@@ -21,6 +23,7 @@ def grab_attention_weights(model, tokenizer, sentences, MAX_LEN, device='cuda:0'
     attention = np.asarray([layer.cpu().detach().numpy() for layer in attention], dtype=np.float16)
     
     return attention
+
 
 def grab_weights_for_all(reviews,
                          model_name='bert-base-multilingual-cased',
@@ -48,7 +51,6 @@ def grab_weights_for_all(reviews,
     
     model = BertModel.from_pretrained(model_name, output_attentions=True)
     tokenizer = BertTokenizer.from_pretrained(model_name, do_lower_case=False)
-    
 
     r_file = Path(output_file)
 
@@ -71,7 +73,8 @@ def grab_weights_for_all(reviews,
         print("Результаты вычисления сохранены в файл", r_file, ".")
         
     return adj_matricies
-  
+
+
 def text_preprocessing(text):
     """
     - Remove entity mentions (eg. '@united')

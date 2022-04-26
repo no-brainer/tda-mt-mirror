@@ -8,6 +8,7 @@ from src.base import BaseTranslator
 
 class GreedyTranslator(BaseTranslator):
 
+    @torch.no_grad()
     def translate(self, src_sent: str) -> str:
         prediction = [self.bos_id]
         src_encoded = torch.as_tensor(self.tokenizer.encode_src(src_sent), dtype=torch.long)
@@ -30,6 +31,7 @@ class GreedyTranslator(BaseTranslator):
         prediction = prediction[1:len(prediction) - 1]
         return self.tokenizer.decode_trg(prediction)
 
+    @torch.no_grad()
     def translate_batch(self, src_sents: List[str]) -> List[str]:
         predictions = [[self.bos_id] for _ in range(len(src_sents))]
         src_encoded = self.tokenizer.encode_src(src_sents)
