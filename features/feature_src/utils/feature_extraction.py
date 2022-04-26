@@ -2,8 +2,8 @@ import networkx as nx
 import numpy as np
 import ripserplusplus as rpp_py
 
-from utils.attn_extraction import get_attn_scores
-import utils.feature_computation as feature
+from feature_src.utils.attn_extraction import get_attn_scores
+import feature_src.utils.feature_computation as feature
 
 
 def prepare_bigraph(incidence_mat, symmetric=False):
