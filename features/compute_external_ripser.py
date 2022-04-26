@@ -45,8 +45,8 @@ def main(args):
 
     for data in reader(args.data_path):
         attns = np.squeeze(grab_attention_weights(model, tokenizer, [data["text"]], MAX_TOKENS, DEVICE), axis=1)
-        compute_graph_features(data["line_idx"], attns, pool, tsv_writers)
-        compute_ripser_features(data["line_idx"], attns, pool, tsv_writers)
+        compute_graph_features(data["line_idx"], THRESHS, attns, pool, tsv_writers, FEATURES)
+        compute_ripser_features(data["line_idx"], attns, pool, tsv_writers, RIPSER_FEATURES)
 
     for file in output_files:
         file.close()
