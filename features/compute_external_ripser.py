@@ -8,9 +8,9 @@ import numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModel
 
+from common.io import create_writers, select_reader
 from features_calculation.grab_weights import grab_attention_weights
 from utils.feature_extraction import graph_features_from_attn, ripser_features_from_attn
-from utils.data_readers import wikihades, wmt19_format, scarecrow_format, custom_dataset_format
 
 
 THRESHS = [0.01, 0.05, 0.15, 0.25]
@@ -29,39 +29,6 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 N_LAYERS = 12
 N_HEADS = 12
-
-
-def unpack_features(feats):
-    cols = []
-    for layer, head, feat in itertools.product(range(N_LAYERS), range(N_HEADS), feats):
-        cols.append(f"l{layer}_h{head}_{feat}")
-    return cols
-
-
-def create_writers(output_base_path):
-    cols = ["line_idx"] + unpack_features(FEATURES)
-    ripser_cols = ["line_idx"] + unpack_features(RIPSER_FEATURES)
-
-    output_files = []
-    tsv_writers = []
-
-    common_dir, basename = os.path.split(output_base_path)
-    basename_parts = basename.split(".")
-    basename = ".".join(basename_parts[:-1])
-    basename_ext = basename_parts[-1]
-
-    for thresh in THRESHS:
-        path = os.path.join(common_dir, f"{basename}_thresh{thresh}.{basename_ext}")
-        output_files.append(open(path, "w"))
-        tsv_writers.append(csv.writer(output_files[-1], dialect="excel-tab"))
-        tsv_writers[-1].writerow(cols)
-
-    ripser_path = os.path.join(common_dir, f"{basename}_ripser.{basename_ext}")
-    output_files.append(open(ripser_path, "w"))
-    tsv_writers.append(csv.writer(output_files[-1], dialect="excel-tab"))
-    tsv_writers[-1].writerow(ripser_cols)
-
-    return tsv_writers, output_files
 
 
 def compute_graph_features(line_idx, attns, pool, tsv_writers):
@@ -96,20 +63,13 @@ def compute_ripser_features(line_idx, attns, pool, tsv_writers):
 
 
 def main(args):
-    if args.data_format == "wikihades":
-        reader = wikihades
-    elif args.data_format == "wmt19":
-        reader = wmt19_format
-    elif args.data_format == "scarecrow":
-        reader = scarecrow_format
-    elif args.data_format == "custom":
-        reader = custom_dataset_format
-    else:
-        raise ValueError(f"Unknown data format: {args.data_format}")
+    reader = select_reader(args.data_format)
 
     pool = multiprocess.get_context("spawn").Pool(args.num_workers)
 
-    tsv_writers, output_files = create_writers(args.output_path_base)
+    tsv_writers, output_files = create_writers(
+        args.output_path_base, N_LAYERS, N_HEADS, THRESHS, FEATURES, RIPSER_FEATURES
+    )
 
     tokenizer = AutoTokenizer.from_pretrained(args.external_model_name, do_lower_case=True)
     model = AutoModel.from_pretrained(args.external_model_name, output_attentions=True).to(DEVICE)
