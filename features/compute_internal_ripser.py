@@ -1,85 +1,94 @@
 import argparse
 import csv
 import itertools
-import multiprocessing
+import multiprocess
 import os
+import sys
 
-from easynmt import EasyNMT
 import torch
 
-from utils.data import tsv_sentence_pairs
-from utils.feature_extraction import graph_features_from_attn
-from utils.attn_extraction import get_attn_scores
+from feature_src.common.computations import compute_ripser_features, compute_graph_features
+from feature_src.common.io import create_writers, select_reader
+from feature_src.utils.attn_extraction import get_attn_scores
 
+sys.path.append("../nmt_model")
+from src.models import NMTTransformer
+import src.tokenizers
+from src.translators import GreedyTranslator
+from src.utils import init_obj, parse_config
 
-parser = argparse.ArgumentParser(
-    description="Compute graph topological features"
-)
-parser.add_argument("input_path", type=str)
-parser.add_argument("output_path_base", type=str)
-parser.add_argument("workers", type=int)
-parser.add_argument("--skip_special_tokens", action="store_false")
-args = parser.parse_args()
-
-OUTPUT_PATH_BASE = args.output_path_base
-DATASET_PATH = args.input_path
-WORKERS = args.workers
-SKIP_SPECIAL_TOKENS = args.skip_special_tokens
 
 THRESHS = [0.01, 0.05, 0.15, 0.25]
-FEATURES = "wcc,scc,sc,b1,avd".split(",")
+FEATURES = ["wcc", "scc", "sc", "b0", "b1", "avd", "e"]
+RIPSER_FEATURES = [
+    "sum_0", "sum_1",
+    "mean_0", "mean_1",
+    "std_0", "std_1",
+    "entropy_0", "entropy_1",
+    "number_0_0", "number_0_0",
+]
 
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-pool = multiprocessing.Pool(len(THRESHS))
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
-
-TGT_LANG = "rus"
-SRC_LANG = "eng"
-
-MODEL_TYPE = "opus-mt"
-MODEL_NAME = f"Helsinki-NLP/opus-mt-{SRC_LANG[:2]}-{TGT_LANG[:2]}"
-
-BEAM_SIZE = 1
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-N_LAYERS = 6
-N_HEADS = 8
 
-model = EasyNMT(MODEL_TYPE)
-translator = model.translator.load_model(MODEL_NAME)
+def prepare_model(config_path, checkpoint_path, **kwargs):
+    config = parse_config(config_path)
 
-cols = ["line_idx"]
-for layer, head, feat in itertools.product(range(N_LAYERS), range(N_HEADS), FEATURES):
-    cols.append(f"l{layer}_h{head}_{feat}")
+    saved_data = torch.load(checkpoint_path, map_location="cpu")
+    model = NMTTransformer(**config["model"])
+    model.load_state_dict(saved_data["state_dict"])
+    model = model.to(DEVICE)
 
-output_files = []
-tsv_writers = []
-for thresh in THRESHS:
-    common_dir, basename = os.path.split(OUTPUT_PATH_BASE)
-    basename_parts = basename.split(".")
-    path = os.path.join(
-        common_dir,
-        "{}_thresh{}.{}".format(".".join(basename_parts[:-1]), thresh, basename_parts[-1])
+    tokenizer = init_obj(src.tokenizers, config["tokenizer"])
+
+    translator = GreedyTranslator(model, tokenizer, DEVICE, **kwargs)
+
+    n_layers = config["model"]["num_decoder_layers"]
+    n_heads = config["model"]["nhead"]
+
+    return translator, n_layers, n_heads
+
+
+def main(args):
+    reader = select_reader(args.data_format)
+
+    pool = multiprocess.get_context("spawn").Pool(args.num_workers)
+
+    translator, n_layers, n_heads = prepare_model(
+        args.config_path,
+        args.checkpoint_path,
+        bos_id=args.bos_id,
+        eos_id=args.eos_id,
+        pad_id=args.pad_id,
+        max_length=args.max_length
     )
-    output_files.append(open(path, "w"))
-    tsv_writers.append(csv.writer(output_files[-1], dialect="excel-tab"))
-    tsv_writers[-1].writerow(cols)
 
-for line_idx, tgt_sentence, src_sentence in tsv_sentence_pairs(DATASET_PATH, TGT_LANG, SRC_LANG):
-    attns = get_attn_scores(src_sentence[0], model, MODEL_NAME, SRC_LANG[:2], TGT_LANG[:2], cut_special_tokens=SKIP_SPECIAL_TOKENS)
+    tsv_writers, output_files = create_writers(
+        args.output_path_base, n_layers, n_heads, THRESHS, FEATURES, RIPSER_FEATURES
+    )
 
-    args = []
-    for thresh, layer, head in itertools.product(THRESHS, range(N_LAYERS), range(N_HEADS)):
-        attn = attns[f"decoder.l{layer}"][0, head]
-        args.append((attn, thresh, ",".join(FEATURES)))
-    
-    results = pool.starmap(graph_features_from_attn, args)
+    for data in reader(args.data_path):
+        attns = get_attn_scores(data["text"], translator)
+        compute_graph_features(data["line_idx"], THRESHS, attns, pool, tsv_writers, FEATURES)
+        compute_ripser_features(data["line_idx"], attns, pool, tsv_writers, RIPSER_FEATURES)
 
-    for i in range(len(THRESHS)):
-        row_data = [line_idx[0]]
-        for j in range(i * N_HEADS * N_LAYERS, (i + 1) * N_HEADS * N_LAYERS):
-            row_data.extend(results[j])
-        tsv_writers[i].writerow(row_data)
+    for file in output_files:
+        file.close()
 
-for file in output_files:
-    file.close()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Compute topological features for MT model")
+    parser.add_argument("data_path", type=str)
+    parser.add_argument("output_path_base", type=str)
+    parser.add_argument("checkpoint_path", type=str)
+    parser.add_argument("config_path", type=str)
+    parser.add_argument("--num_workers", default=1, type=int)
+
+    parser.add_argument("--max_length", "-l", type=int, default=128)
+    parser.add_argument("--bos_id", type=int, default=2)
+    parser.add_argument("--eos_id", type=int, default=3)
+    parser.add_argument("--pad_id", type=int, default=0)
+
+    script_args = parser.parse_args()
+
+    main(script_args)
