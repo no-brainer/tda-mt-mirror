@@ -15,6 +15,7 @@ class BaseTranslator:
 
         self.device = device
 
+        model.eval()  # just in case
         self.model = model
         self.tokenizer = tokenizer
 
