@@ -1,6 +1,4 @@
 import argparse
-import csv
-import itertools
 import multiprocess
 import os
 
@@ -8,9 +6,9 @@ import numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModel
 
-from common.io import create_writers, select_reader
-from features_calculation.grab_weights import grab_attention_weights
-from utils.feature_extraction import graph_features_from_attn, ripser_features_from_attn
+from feature_src.common.io import create_writers, select_reader
+from feature_src.common.computations import compute_ripser_features, compute_graph_features
+from feature_src.features_calculation.grab_weights import grab_attention_weights
 
 
 THRESHS = [0.01, 0.05, 0.15, 0.25]
@@ -29,37 +27,6 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 N_LAYERS = 12
 N_HEADS = 12
-
-
-def compute_graph_features(line_idx, attns, pool, tsv_writers):
-    func_args = []
-    for thresh, layer, head in itertools.product(THRESHS, range(N_LAYERS), range(N_HEADS)):
-        attn = torch.tensor(attns[layer, head])
-        func_args.append((attn, thresh, ",".join(FEATURES)))
-
-    results = pool.starmap(graph_features_from_attn, func_args)
-
-    for i in range(len(THRESHS)):
-        row_data = [line_idx]
-        for j in range(i * N_HEADS * N_LAYERS, (i + 1) * N_HEADS * N_LAYERS):
-            row_data.extend(results[j])
-
-        tsv_writers[i].writerow(row_data)
-
-
-def compute_ripser_features(line_idx, attns, pool, tsv_writers):
-    func_args = []
-    for layer, head in itertools.product(range(N_LAYERS), range(N_HEADS)):
-        attn = attns[layer, head]
-        func_args.append((attn, RIPSER_FEATURES))
-
-    results = pool.starmap(ripser_features_from_attn, func_args)
-
-    row_data = [line_idx]
-    for data in results:
-        row_data.extend(data)
-
-    tsv_writers[-1].writerow(row_data)
 
 
 def main(args):
