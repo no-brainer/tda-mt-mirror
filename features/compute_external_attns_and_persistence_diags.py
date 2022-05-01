@@ -8,8 +8,8 @@ import ripserplusplus as rpp_py
 import torch
 from transformers import AutoTokenizer, AutoModel
 
-from features_calculation.grab_weights import grab_attention_weights
-from utils.data_readers import wikihades, wmt19_format
+from feature_src.features_calculation.grab_weights import grab_attention_weights
+from feature_src.common.io import select_reader
 
 
 MAX_TOKENS = 128
@@ -17,12 +17,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def compute_and_save_attns(model_name, data_format, input_file, tmp_folder):
-    if data_format == "wikihades":
-        reader = wikihades
-    elif data_format == "wmt19":
-        reader = wmt19_format
-    else:
-        raise ValueError(f"Unknown data format: {data_format}")
+    reader = select_reader(data_format)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, do_lower_case=True)
     model = AutoModel.from_pretrained(model_name, output_attentions=True).to(DEVICE)
