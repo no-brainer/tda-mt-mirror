@@ -2,6 +2,7 @@ import argparse
 import multiprocess
 import sys
 
+import numpy as np
 import torch
 
 from feature_src.common.computations import compute_ripser_features, compute_graph_features
@@ -47,6 +48,17 @@ def prepare_model(config_path, checkpoint_path, **kwargs):
     return translator, n_layers, n_heads
 
 
+def prepare_square_matrices(attns):
+    n_layers, n_heads, n_tokens_trg, n_tokens_src = attns.shape[-2:]
+    n_tokens = n_tokens_trg + n_tokens_src
+
+    new_attns = np.zeros((n_layers, n_heads, n_tokens, n_tokens))
+    new_attns[:, :, n_tokens_src:, :n_tokens_src] = attns
+    new_attns[:, :, :n_tokens_src, n_tokens_src:] = np.transpose(attns, (0, 1, 3, 2))
+
+    return new_attns
+
+
 def main(args):
     reader = select_reader(args.data_format)
 
@@ -67,6 +79,7 @@ def main(args):
 
     for data in reader(args.data_path):
         attns = get_attn_scores(data["text"], translator)
+        attns = prepare_square_matrices(attns)
         compute_graph_features(data["line_idx"], THRESHS, attns, pool, tsv_writers, FEATURES)
         compute_ripser_features(data["line_idx"], attns, pool, tsv_writers, RIPSER_FEATURES)
 
