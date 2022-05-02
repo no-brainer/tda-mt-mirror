@@ -1,8 +1,5 @@
 import argparse
-import csv
-import itertools
 import multiprocess
-import os
 import sys
 
 import torch
@@ -79,6 +76,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compute topological features for MT model")
     parser.add_argument("data_path", type=str)
+    parser.add_argument("data_format", type=str)
     parser.add_argument("output_path_base", type=str)
     parser.add_argument("checkpoint_path", type=str)
     parser.add_argument("config_path", type=str)
