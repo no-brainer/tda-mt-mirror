@@ -6,7 +6,7 @@ import torch
 
 from feature_src.common.computations import compute_ripser_features, compute_graph_features
 from feature_src.common.io import create_writers, select_reader
-from feature_src.utils.attn_extraction import get_attn_scores
+from feature_src.utils.attn_extraction import get_attn_scores, prepare_for_attn_extraction
 
 sys.path.append("../nmt_model")
 from src.models import NMTTransformer
@@ -34,6 +34,7 @@ def prepare_model(config_path, checkpoint_path, **kwargs):
     saved_data = torch.load(checkpoint_path, map_location="cpu")
     model = NMTTransformer(**config["model"])
     model.load_state_dict(saved_data["state_dict"])
+    prepare_for_attn_extraction(model)
     model = model.to(DEVICE)
 
     tokenizer = init_obj(src.tokenizers, config["tokenizer"])
