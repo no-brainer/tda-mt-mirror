@@ -49,7 +49,7 @@ def prepare_model(config_path, checkpoint_path, **kwargs):
 
 
 def prepare_square_matrices(attns):
-    n_layers, n_heads, n_tokens_trg, n_tokens_src = attns.shape[-2:]
+    n_layers, n_heads, n_tokens_trg, n_tokens_src = attns.shape
     n_tokens = n_tokens_trg + n_tokens_src
 
     new_attns = np.zeros((n_layers, n_heads, n_tokens, n_tokens))
