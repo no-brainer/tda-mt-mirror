@@ -94,8 +94,8 @@ def main(args):
     attn_folder = os.path.join(args.base_path, "attns")
     if not os.path.exists(attn_folder):
         os.makedirs(attn_folder, exist_ok=True)
-        compute_and_save_attns(args.external_model_name, args.data_format,
-                               args.data_path, attn_folder)
+        translator, _, _ = prepare_model(args.config_path, args.checkpoint_path, max_length=args.max_length)
+        compute_and_save_attns(translator, args.data_format, args.data_path, attn_folder)
 
         attn_zip_filename = os.path.join(args.base_path, "attns.zip")
         shutil.make_archive(os.path.join(args.base_path, "attns"), "zip", attn_folder)
@@ -124,6 +124,7 @@ if __name__ == "__main__":
     parser.add_argument("checkpoint_path", type=str)
     parser.add_argument("config_path", type=str)
     parser.add_argument("--max_dim", type=int, default=1)
+    parser.add_argument("--max_length", "-l", type=int, default=128)
     args = parser.parse_args()
 
     main(args)
