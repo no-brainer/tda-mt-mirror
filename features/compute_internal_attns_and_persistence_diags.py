@@ -43,7 +43,7 @@ def compute_and_save_attns(translator, data_format, input_file, tmp_folder):
     reader = select_reader(data_format)
 
     for data in reader(input_file):
-        attns = np.squeeze(get_attn_scores(data["text"], translator), axis=1)
+        attns = get_attn_scores(data["text"], translator)
 
         attn_filename = os.path.join(tmp_folder, f"{data['line_idx']}.npy")
         np.save(attn_filename, attns)
