@@ -1,6 +1,6 @@
 sacrebleu>=2.0.0
 -f https://download.pytorch.org/whl/torch_stable.html
-torch==1.10+cu111
+torch==1.11.0+cu113
 numpy
 gdown>=4.2.2
 wandb

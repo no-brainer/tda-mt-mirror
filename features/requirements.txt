@@ -5,5 +5,5 @@ networkx
 transformers
 multiprocess
 -f https://download.pytorch.org/whl/torch_stable.html
-torch==1.11.0+cu111
+torch==1.11.0+cu113
 rouge-score
