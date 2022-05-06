@@ -1,6 +1,7 @@
 import argparse
 from itertools import product
 import os
+import pickle
 import shutil
 import sys
 
@@ -39,14 +40,19 @@ def prepare_model(config_path, checkpoint_path, **kwargs):
     return translator, n_layers, n_heads
 
 
-def compute_and_save_attns(translator, data_format, input_file, tmp_folder):
+def compute_and_save_attns(translator, data_format, input_file, tmp_folder, keep_last):
     reader = select_reader(data_format)
 
     for data in reader(input_file):
-        attns = get_attn_scores(data["text"], translator)
+        attns = get_attn_scores(data["text"], translator, keep_last)
 
-        attn_filename = os.path.join(tmp_folder, f"{data['line_idx']}.npy")
-        np.save(attn_filename, attns)
+        if keep_last:
+            attn_filename = os.path.join(tmp_folder, f"{data['line_idx']}.npy")
+            np.save(attn_filename, attns)
+            continue
+
+        with open(os.path.join(tmp_folder, f"{data['line_idx']}.pickle"), "wb") as pickle_file:
+            pickle.dump(attns, pickle_file)
 
 
 def struct_barcode_to_ndarray(struct_barcode):
@@ -95,11 +101,14 @@ def main(args):
     if not os.path.exists(attn_folder):
         os.makedirs(attn_folder, exist_ok=True)
         translator, _, _ = prepare_model(args.config_path, args.checkpoint_path, max_length=args.max_length)
-        compute_and_save_attns(translator, args.data_format, args.data_path, attn_folder)
+        compute_and_save_attns(translator, args.data_format, args.data_path, attn_folder, args.keep_last)
 
         attn_zip_filename = os.path.join(args.base_path, "attns.zip")
         shutil.make_archive(os.path.join(args.base_path, "attns"), "zip", attn_folder)
         print(f"Saved attentions to {attn_zip_filename}")
+
+    if args.skip_diag_computations:
+        return
 
     diag_folder = os.path.join(args.base_path, "diags")
     if not os.path.exists(diag_folder):
@@ -123,8 +132,13 @@ if __name__ == "__main__":
     parser.add_argument("base_path", type=str)
     parser.add_argument("checkpoint_path", type=str)
     parser.add_argument("config_path", type=str)
+
     parser.add_argument("--max_dim", type=int, default=1)
     parser.add_argument("--max_length", "-l", type=int, default=128)
-    args = parser.parse_args()
 
-    main(args)
+    parser.add_argument("--collect_all_maps", dest="keep_last", action="store_false")
+    parser.add_argument("--skip_diag_computations", action="store_true")
+
+    script_args = parser.parse_args()
+
+    main(script_args)
