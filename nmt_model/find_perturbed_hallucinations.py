@@ -48,9 +48,9 @@ def check_with_perturbations(perturbation_tokens, translator, src_sent, trg_sent
             adj_bleu = bleu_metric.sentence_score(translation, [trg_sent])
             adj_bleu = adj_bleu.score
             if adj_bleu < hallucination_thresh:
-                return True
+                return True, translation
 
-    return False
+    return False, None
 
 
 def detect_hallucinations(perturbation_tokens, translator, src_datapath, trg_datapath, out_datapath,
@@ -66,11 +66,21 @@ def detect_hallucinations(perturbation_tokens, translator, src_datapath, trg_dat
             adj_bleu = bleu_metric.sentence_score(translation, [trg_sent])
             adj_bleu = adj_bleu.score
             is_hallucination = False
+            perturbed_hallucination = None
             if adj_bleu > perturbation_thresh:
-                is_hallucination = check_with_perturbations(perturbation_tokens, translator, src_sent, trg_sent,
-                                                            hallucination_thresh)
-            out_file.write("1" if is_hallucination else "0")
-            out_file.write("\n")
+                is_hallucination, perturbed_hallucination = check_with_perturbations(
+                    perturbation_tokens,
+                    translator,
+                    src_sent,
+                    trg_sent,
+                    hallucination_thresh
+                )
+
+            if perturbed_hallucination is None:
+                perturbed_hallucination = translation
+
+            label = "1" if is_hallucination else "0"
+            out_file.write(f"{perturbed_hallucination},{label}\n")
 
 
 def select_perturbation_tokens(tokenizer, src_datapath, n_tokens):
