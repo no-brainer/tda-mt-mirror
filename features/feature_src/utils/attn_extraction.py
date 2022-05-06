@@ -67,7 +67,6 @@ def get_attn_scores(sentence, translator, keep_last_pass_only=True):
                 attn_scores[i].append(attn_map)
 
     finally:
-        print("Something went wrong. Removing hooks...")
         remove_hooks(handles)
 
     for i in range(num_passes):
