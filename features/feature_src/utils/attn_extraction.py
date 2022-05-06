@@ -52,21 +52,27 @@ def remove_hooks(hook_handles):
         handle.remove()
 
 
-def get_attn_scores(sentence, translator):
+def get_attn_scores(sentence, translator, keep_last_pass_only=True):
     """
-    @return dict of attentions. keys are decoder.l{layer_num}.
-    the shape of each tensor in dict is (1, num_heads, num_tokens_tgt, num_tokens_src)
+    the shape of each tensor in dict is (num_layers, num_heads, num_tokens_tgt, num_tokens_src)
     """
     hooks, handles = add_hooks(translator.model)
     try:
         translator.translate(sentence)
 
-        attn_scores = []
+        num_passes = len(list(hooks.values())[0].saved_outs)
+        attn_scores = [[] for _ in range(num_passes)]
         for hook_name, hook in hooks.items():
-            attn_scores.append(hook.saved_outs[-1])
+            for i, attn_map in enumerate(hook.saved_outs):
+                attn_scores[i].append(attn_map)
 
     finally:
+        print("Something went wrong. Removing hooks...")
         remove_hooks(handles)
 
-    attn_scores = torch.cat(attn_scores, dim=0)
-    return attn_scores.numpy()
+    for i in range(num_passes):
+        attn_scores[i] = torch.cat(attn_scores[i], dim=0).numpy()
+
+    if keep_last_pass_only:
+        return attn_scores[-1]
+    return attn_scores
