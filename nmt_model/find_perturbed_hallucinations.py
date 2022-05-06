@@ -29,7 +29,7 @@ class AdjustedBLEU(sacrebleu.BLEU):
         return ngrams
 
 
-def check_with_perturbations(perturbation_tokens, translator, src_sent, trg_sent, batch_size=16):
+def check_with_perturbations(perturbation_tokens, translator, src_sent, trg_sent, hallucination_thresh, batch_size=16):
     bleu_metric = AdjustedBLEU(effective_order=True)
 
     src_tokens = translator.tokenizer.encode_src(src_sent)
@@ -47,13 +47,14 @@ def check_with_perturbations(perturbation_tokens, translator, src_sent, trg_sent
         for translation in translations:
             adj_bleu = bleu_metric.sentence_score(translation, [trg_sent])
             adj_bleu = adj_bleu.score
-            if adj_bleu < 1.:
+            if adj_bleu < hallucination_thresh:
                 return True
 
     return False
 
 
-def detect_hallucinations(perturbation_tokens, translator, src_datapath, trg_datapath, out_datapath):
+def detect_hallucinations(perturbation_tokens, translator, src_datapath, trg_datapath, out_datapath,
+                          perturbation_thresh, hallucination_thresh):
     bleu_metric = AdjustedBLEU(effective_order=True)
     with open(src_datapath, "r") as src_file, \
             open(trg_datapath, "r") as trg_file, \
@@ -65,8 +66,9 @@ def detect_hallucinations(perturbation_tokens, translator, src_datapath, trg_dat
             adj_bleu = bleu_metric.sentence_score(translation, [trg_sent])
             adj_bleu = adj_bleu.score
             is_hallucination = False
-            if adj_bleu > 9.:
-                is_hallucination = check_with_perturbations(perturbation_tokens, translator, src_sent, trg_sent)
+            if adj_bleu > perturbation_thresh:
+                is_hallucination = check_with_perturbations(perturbation_tokens, translator, src_sent, trg_sent,
+                                                            hallucination_thresh)
             out_file.write("1" if is_hallucination else "0")
             out_file.write("\n")
 
@@ -109,7 +111,8 @@ def main(args):
     decoded_pert_tokens = tokenizer.decode_src([[idx] for idx in perturbation_tokens])
     print(*decoded_pert_tokens)
 
-    detect_hallucinations(perturbation_tokens, translator, args.src_datapath, args.trg_datapath, args.out_datapath)
+    detect_hallucinations(perturbation_tokens, translator, args.src_datapath, args.trg_datapath, args.out_datapath,
+                          args.perturbation_thresh, args.hallucination_thresh)
 
 
 if __name__ == "__main__":
@@ -129,6 +132,9 @@ if __name__ == "__main__":
     parser.add_argument("--bos_id", type=int, default=2)
     parser.add_argument("--eos_id", type=int, default=3)
     parser.add_argument("--pad_id", type=int, default=0)
+
+    parser.add_argument("--perturbation_thresh", type=float, default=9.)
+    parser.add_argument("--hallucination_thresh", type=float, default=1.)
 
     script_args = parser.parse_args()
 
