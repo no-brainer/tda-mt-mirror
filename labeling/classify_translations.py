@@ -49,6 +49,12 @@ class LabelingManager:
         training_config = parse_config(args.config_path)
         self.tokenizer = init_obj(src.tokenizers, training_config["tokenizer"])
 
+        self.hallucination_ngram_counts = args.hallucination_ngram_counts
+        self.skip_non_hallucination = args.skip_non_hallucination
+
+        self.bleu_threshold = args.bleu_thresh
+        self.skip_low_bleu = args.skip_low_bleu
+
     def __call__(self, stdscr):
         curses.curs_set(0)
         is_exiting = self._show_help(stdscr)
@@ -128,18 +134,24 @@ class LabelingManager:
                 bleu_score = bleu_metric.sentence_score(tr_sent, [trg_sent])
                 stdscr.addstr(f"BLEU: {bleu_score.score:.6f}\n\n")
 
-                if bleu_score.score > 60.:
+                if bleu_score.score > self.bleu_threshold:
                     stdscr.addstr(f"High BLEU - possibly good?\n\n")
+                elif self.skip_low_bleu:
+                    offset += 1
+                    continue
 
                 tokens = self.tokenizer.encode_trg(tr_sent)
                 is_hal = False
-                for ngram_order, count_thresh in [(1, 8), (2, 5), (3, 3)]:
+                for ngram_order, count_thresh in enumerate(self.hallucination_ngram_counts, start=1):
                     max_ngram_count = self._count_ngrams(tokens, ngram_order)
                     if max_ngram_count >= count_thresh:
                         is_hal = True
 
                 if is_hal:
-                    stdscr.addstr(f"Many repeating ngrams - possibly hallucination\n\n")
+                    stdscr.addstr(f"Many repeating ngrams - possibly a hallucination?\n\n")
+                elif self.skip_non_hallucination:
+                    offset += 1
+                    continue
 
                 stdscr.refresh()
                 keypress = stdscr.getkey()
@@ -165,6 +177,12 @@ if __name__ == "__main__":
     parser.add_argument("translations_datapath", type=str)
     parser.add_argument("labels_datapath", type=str)
     parser.add_argument("config_path", type=str)
+
+    parser.add_argument("--hallucination_ngram_counts", nargs=3, type=int, default=[8, 5, 3])
+    parser.add_argument("--skip_non_hallucination", action="store_true")
+
+    parser.add_argument("--bleu_thresh", type=float, default=35.)
+    parser.add_argument("--skip_low_bleu", action="store_true")
 
     script_args = parser.parse_args()
 
