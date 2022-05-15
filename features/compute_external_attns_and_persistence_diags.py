@@ -81,6 +81,9 @@ def main(args):
         shutil.make_archive(os.path.join(args.base_path, "attns"), "zip", attn_folder)
         print(f"Saved attentions to {attn_zip_filename}")
 
+    if args.skip_diag_computations:
+        return
+
     diag_folder = os.path.join(args.base_path, "diags")
     if not os.path.exists(diag_folder):
         os.makedirs(diag_folder, exist_ok=True)
@@ -103,6 +106,8 @@ if __name__ == "__main__":
     parser.add_argument("external_model_name", type=str)
     parser.add_argument("data_format", type=str)
     parser.add_argument("--max_dim", type=int, default=1)
+    parser.add_argument("--skip_diag_computations", action="store_true")
+
     args = parser.parse_args()
 
     main(args)
